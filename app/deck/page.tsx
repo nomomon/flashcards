@@ -17,11 +17,9 @@ const DeckPage = () => {
         });
     }, [deckId]);
 
-    if (!deck) {
-        return <div>Loading...</div>;
-    }
-
-    return <LearnDeck deck={deck} deckProgress={deckProgress} />;
+    return (
+        <LearnDeck deck={deck} deckProgress={deckProgress} />
+    );
 }
 
 export default DeckPage;
