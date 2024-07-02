@@ -1,5 +1,6 @@
 interface Deck {
-  name: string;
-  color: string;
-  words: WordPair[];
+    id: string;
+    name: string;
+    color: string;
+    words: WordPair[];
 }

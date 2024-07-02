@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { CACHE_SIZE_UNLIMITED, persistentLocalCache } from "firebase/firestore";
-import { collection, getDocs, initializeFirestore } from "firebase/firestore/lite";
+import { collection, doc, getDoc, getDocs, initializeFirestore } from "firebase/firestore/lite";
 
 const firebaseConfig = {
     apiKey: "REDACTED_FIREBASE_WEB_API_KEY",
@@ -21,6 +21,22 @@ const db = initializeFirestore(app, { //@ts-ignore
 export async function getDecks() {
     const decksCol = collection(db, "decks");
     const deckSnapshot = await getDocs(decksCol);
-    const deckList = deckSnapshot.docs.map((doc) => doc.data());
+    const deckList = deckSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+    }));
     return deckList;
+}
+
+export async function getDeck(deckId: string) {
+    const decksCol = collection(db, "decks");
+    const deckDoc = await getDoc(doc(decksCol, deckId));
+    if (deckDoc.exists()) {
+        return {
+            id: deckDoc.id,
+            ...deckDoc.data()
+        } as Deck;
+    } else {
+        throw new Error("Deck not found");
+    }
 }
