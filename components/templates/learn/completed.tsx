@@ -11,23 +11,21 @@ const LearnDeckCompleted: FC<LearnDeckCompletedProps> = ({ deckId, correctCount,
     return (
         <div className="w-full h-full">
             <div className="max-w-sm mx-auto p-5 aspect-square flex justify-center items-center text-6xl">
-                {/* <span>{Math.round((shownCount / totalCount) * 100)}%</span> */}
                 <span>{correctCount}/{totalCount}</span>
                 <svg className="absolute" viewBox="0 0 36 36" width="200" height="200">
                     <circle cx="18" cy="18" r="16" fill="none" strokeWidth="2" style={{ stroke: "rgba(0, 0, 0, 0.1)" }} />
-                    {/* animated circle progress */}
                     <circle cx="18" cy="18" r="16" fill="none" strokeWidth="2" style={{ stroke: "hsl(var(--warning))", strokeDasharray: `${(correctCount / totalCount) * 100} 100` }} />
                 </svg>
             </div>
             <div className="max-w-sm mx-auto flex justify-between">
                 <Button variant={"ghost"} onClick={() => clearProgress(deckId)}>
-                    Начать заново
+                    Reset progress
                 </Button>
                 <Button variant={"ghost"} onClick={returnHome}>
-                    Домой
+                    Home
                 </Button>
                 <Button variant={"ghost"} onClick={continueLearning}>
-                    Продолжить
+                    Continue learning
                 </Button>
             </div>
         </div>
