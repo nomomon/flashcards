@@ -4,6 +4,7 @@ import { FC, useState } from "react";
 import LearnDeckCompleted from "./completed";
 import { get } from "http";
 import FeedbackButton from "./feedback-button";
+import FlipableCard from "./flipable-card";
 
 interface LearnDeckProps {
     deck: Deck;
@@ -33,11 +34,7 @@ const LearnDeck: FC<LearnDeckProps> = ({ deck, deckProgress }) => {
 
     return (
         <div className="w-full h-full">
-            <div
-                className="max-w-sm bg-white rounded-xl shadow-md mx-auto my-10 p-5 aspect-square flex justify-center items-center text-6xl"
-            >
-                <span>{wordList[0].front}</span>
-            </div>
+            <FlipableCard front={wordList[0].front} back={wordList[0].back} />
             <div className="max-w-md mx-auto flex justify-between">
                 <FeedbackButton onClick={() => updateProgress(0)} text="Incorrect">
                     <CornerUpLeftIcon />
