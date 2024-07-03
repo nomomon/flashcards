@@ -3,6 +3,7 @@ import { CornerUpLeftIcon, CornerUpRightIcon } from "lucide-react";
 import { FC, useState } from "react";
 import LearnDeckCompleted from "./completed";
 import { get } from "http";
+import FeedbackButton from "./feedback-button";
 
 interface LearnDeckProps {
     deck: Deck;
@@ -38,18 +39,12 @@ const LearnDeck: FC<LearnDeckProps> = ({ deck, deckProgress }) => {
                 <span>{wordList[0].front}</span>
             </div>
             <div className="max-w-md mx-auto flex justify-between">
-                <div
-                    onClick={() => updateProgress(0)}
-                    className="flex items-center justify-center flex-col cursor-pointer text-muted-foreground select-none">
+                <FeedbackButton onClick={() => updateProgress(0)} text="Incorrect">
                     <CornerUpLeftIcon />
-                    <span className="text-sm">Incorrect</span>
-                </div>
-                <div
-                    onClick={() => updateProgress(1)}
-                    className="flex items-center justify-center flex-col cursor-pointer text-muted-foreground select-none">
+                </FeedbackButton>
+                <FeedbackButton onClick={() => updateProgress(1)} text="Correct">
                     <CornerUpRightIcon />
-                    <span className="text-sm">Correct</span>
-                </div>
+                </FeedbackButton>
             </div>
         </div>
     )
