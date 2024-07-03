@@ -1,13 +1,11 @@
-import { FC, Suspense } from "react"
+import { FC, Suspense } from "react";
 
 interface LayoutProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 const Layout: FC<LayoutProps> = ({ children }) => {
-    return (
-        <Suspense>{children}</Suspense>
-    )
-}
+  return <Suspense>{children}</Suspense>;
+};
 
 export default Layout;
