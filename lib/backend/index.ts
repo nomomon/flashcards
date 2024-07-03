@@ -1,12 +1,15 @@
 import { initializeApp } from "firebase/app";
-import { CACHE_SIZE_UNLIMITED, persistentLocalCache } from "firebase/firestore";
 import {
+  CACHE_SIZE_UNLIMITED,
+  getDocFromCache,
+  persistentLocalCache,
   collection,
   doc,
   getDoc,
   getDocs,
   initializeFirestore,
-} from "firebase/firestore/lite";
+  getDocsFromCache,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "REDACTED_FIREBASE_WEB_API_KEY",
@@ -22,12 +25,11 @@ const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, {
   //@ts-ignore
   localCache: persistentLocalCache({}),
-  cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 });
 
-export async function getDecks() {
+export async function getDecks(useCache: boolean = true) {
   const decksCol = collection(db, "decks");
-  const deckSnapshot = await getDocs(decksCol);
+  const deckSnapshot = await (useCache ? getDocsFromCache : getDocs)(decksCol);
   const deckList = deckSnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
@@ -37,13 +39,14 @@ export async function getDecks() {
 
 export async function getDeck(deckId: string) {
   const decksCol = collection(db, "decks");
-  const deckDoc = await getDoc(doc(decksCol, deckId));
+  const deckDoc = await getDocFromCache(doc(decksCol, deckId)).catch(() =>
+    getDoc(doc(decksCol, deckId)),
+  );
   if (deckDoc.exists()) {
     return {
       id: deckDoc.id,
       ...deckDoc.data(),
     } as Deck;
   } else {
-    throw new Error("Deck not found");
   }
 }
