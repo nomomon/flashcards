@@ -9,8 +9,12 @@ interface LearnDeckProps {
     deckProgress: DeckProgress;
 }
 
+const excludeCorrectWords = (words: WordPair[], progress: DeckProgress) => {
+    return words.filter(word => progress[word.front] !== 1);
+}
+
 const LearnDeck: FC<LearnDeckProps> = ({ deck, deckProgress }) => {
-    const [wordList, setWordList] = useState<WordPair[]>(shuffle(deck.words));
+    const [wordList, setWordList] = useState<WordPair[]>(shuffle(excludeCorrectWords(deck.words, deckProgress)));
 
     const updateProgress = (progress: 0 | 1) => {
         const word = wordList[0];
