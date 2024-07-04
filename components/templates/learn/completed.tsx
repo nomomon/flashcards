@@ -15,7 +15,7 @@ const LearnDeckCompleted: FC<LearnDeckCompletedProps> = ({
 }) => {
   return (
     <div className="w-full h-full">
-      <div className="max-w-sm mx-auto p-5 aspect-square flex justify-center items-center text-6xl">
+      <div className="max-w-sm mx-auto p-5 aspect-square flex justify-center items-center text-2xl">
         <span>
           {correctCount}/{totalCount}
         </span>
