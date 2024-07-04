@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { FC, useState } from "react";
+import { clearProgress } from "@/lib/utils";
+import { FC } from "react";
 
 interface LearnDeckCompletedProps {
   deckId: Deck["id"];
@@ -25,23 +26,34 @@ const LearnDeckCompleted: FC<LearnDeckCompletedProps> = ({
             r="16"
             fill="none"
             strokeWidth="2"
-            style={{ stroke: "rgba(0, 0, 0, 0.1)" }}
+            style={{ stroke: "hsl(var(--muted))" }}
           />
           <circle
+            strokeLinecap="round"
             cx="18"
             cy="18"
             r="16"
             fill="none"
             strokeWidth="2"
             style={{
-              stroke: "hsl(var(--warning))",
-              strokeDasharray: `${(correctCount / totalCount) * 100} 100`,
+              stroke: correctCount > 0 ? "hsl(var(--warning))" : "",
+              strokeDasharray: `${(correctCount / totalCount) * 100} ${(totalCount / correctCount) * 100}`,
+              strokeDashoffset: 100,
+              animation: "dash 500ms linear forwards",
+              transformOrigin: "center",
+              transform: "rotate(-90deg)",
             }}
           />
         </svg>
       </div>
       <div className="max-w-sm mx-auto flex justify-between">
-        <Button variant={"ghost"} onClick={() => clearProgress(deckId)}>
+        <Button
+          variant={"ghost"}
+          onClick={() => {
+            clearProgress(deckId);
+            window.location.reload();
+          }}
+        >
           Reset progress
         </Button>
         <Button variant={"ghost"} onClick={returnHome}>
@@ -53,11 +65,6 @@ const LearnDeckCompleted: FC<LearnDeckCompletedProps> = ({
       </div>
     </div>
   );
-};
-
-const clearProgress = (deckId: string) => {
-  localStorage.removeItem(`progress_${deckId}`);
-  window.location.reload();
 };
 
 const returnHome = () => {
