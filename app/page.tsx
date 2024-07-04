@@ -16,13 +16,17 @@ export default function Home() {
 }
 
 const wasLastUpdateToday = () => {
-  const lastUpdateStr = localStorage.getItem("lastUpdate");
-  if (!lastUpdateStr) {
-    localStorage.setItem("lastUpdate", new Date().toISOString());
+  try {
+    const lastUpdateStr = localStorage.getItem("lastUpdate");
+    if (!lastUpdateStr) {
+      localStorage.setItem("lastUpdate", new Date().toISOString());
+      return false;
+    }
+    const lastUpdate = new Date(lastUpdateStr);
+    const today = new Date();
+    localStorage.setItem("lastUpdate", today.toISOString());
+    return lastUpdate.toDateString() === today.toDateString();
+  } catch (e) {
     return false;
   }
-  const lastUpdate = new Date(lastUpdateStr);
-  const today = new Date();
-  localStorage.setItem("lastUpdate", today.toISOString());
-  return lastUpdate.toDateString() === today.toDateString();
 };
