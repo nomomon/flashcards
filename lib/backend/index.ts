@@ -48,5 +48,6 @@ export async function getDeck(deckId: string) {
       ...deckDoc.data(),
     } as Deck;
   } else {
+    throw new Error("Deck not found");
   }
 }
