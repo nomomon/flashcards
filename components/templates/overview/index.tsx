@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { AlignLeftIcon, BrainCircuitIcon } from "lucide-react";
 import { useState } from "react";
 import DeckPreview from "./preview";
+import ForceUpdateButton from "./force-update";
 
 interface OverviewTemplateProps {
   data: Deck[];
@@ -12,6 +13,9 @@ const OverviewTemplate: React.FC<OverviewTemplateProps> = ({ data }) => {
 
   return (
     <>
+      <div className="w-full flex justify-end my-4">
+        <ForceUpdateButton />
+      </div>
       <div className="w-full grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {data.map((deck) => (
           <div

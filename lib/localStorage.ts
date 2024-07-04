@@ -1,3 +1,5 @@
+import { toast } from "@/components/ui/use-toast";
+
 export const getProgress = (deckId: Deck["id"]) => {
   return JSON.parse(localStorage.getItem(`progress_${deckId}`) || "{}");
 };
@@ -34,5 +36,16 @@ export const wasLastUpdateToday = () => {
     return lastUpdate.toDateString() === today.toDateString();
   } catch (e) {
     return false;
+  }
+};
+
+export const forceUpdate = () => {
+  try {
+    localStorage.removeItem("lastUpdate");
+  } catch (e) {
+    toast({
+      title: "Error: Failed to force update",
+      description: JSON.stringify(e),
+    });
   }
 };
