@@ -44,11 +44,7 @@ const LearnDeck: FC<LearnDeckProps> = ({ deck, deckProgress }) => {
 
   return (
     <div className="w-full h-full">
-      <FlipableCard
-        front={wordList[0].front}
-        back={wordList[0].back}
-        key={wordList[0].front}
-      />
+      <FlipableCard front={wordList[0].front} back={wordList[0].back} />
       <div className="max-w-md mx-auto flex justify-between">
         <FeedbackButton onClick={() => updateProgress(0)} text="Incorrect">
           <CornerUpLeftIcon />
