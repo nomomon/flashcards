@@ -26,7 +26,7 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
           <DrawerTitle>{deck.name}</DrawerTitle>
           <DrawerDescription>{deck.words.length} word pairs</DrawerDescription>
         </DrawerHeader>
-        <div className="p-4 flex flex-col gap-2">
+        <div className="p-4 flex flex-col gap-2 max-h-[90vh] overflow-scroll">
           {deck.words.map((wordPair, idx) => (
             <div
               key={idx}
