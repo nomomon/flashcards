@@ -3,6 +3,7 @@ import OverviewTemplate from "@/components/templates/overview";
 import { getDecks } from "@/lib/backend";
 import { wasLastUpdateToday } from "@/lib/localStorage";
 import { useEffect, useState } from "react";
+// import "@/lib/backend/populate";
 
 export default function Home() {
   const [data, setData] = useState<Deck[]>([]);

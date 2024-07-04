@@ -9,6 +9,7 @@ import {
   getDocs,
   initializeFirestore,
   getDocsFromCache,
+  setDoc,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -50,4 +51,10 @@ export async function getDeck(deckId: string) {
   } else {
     throw new Error("Deck not found");
   }
+}
+
+export async function updateDeck(deck: Deck) {
+  const decksCol = collection(db, "decks");
+  const newDeck = await setDoc(doc(decksCol, deck.id), deck);
+  return newDeck;
 }
