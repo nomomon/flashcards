@@ -1,6 +1,7 @@
 "use client";
 import OverviewTemplate from "@/components/templates/overview";
 import { getDecks } from "@/lib/backend";
+import { wasLastUpdateToday } from "@/lib/localStorage";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -14,19 +15,3 @@ export default function Home() {
 
   return <OverviewTemplate data={data} />;
 }
-
-const wasLastUpdateToday = () => {
-  try {
-    const lastUpdateStr = localStorage.getItem("lastUpdate");
-    if (!lastUpdateStr) {
-      localStorage.setItem("lastUpdate", new Date().toISOString());
-      return false;
-    }
-    const lastUpdate = new Date(lastUpdateStr);
-    const today = new Date();
-    localStorage.setItem("lastUpdate", today.toISOString());
-    return lastUpdate.toDateString() === today.toDateString();
-  } catch (e) {
-    return false;
-  }
-};

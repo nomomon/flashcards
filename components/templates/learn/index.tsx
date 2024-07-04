@@ -1,15 +1,16 @@
+"use client";
+
+import { shuffle } from "@/lib/utils";
+import { CornerUpLeftIcon, CornerUpRightIcon } from "lucide-react";
+import { FC, useState } from "react";
+import LearnDeckCompleted from "./completed";
+import FeedbackButton from "./feedback-button";
+import FlipableCard from "./flipable-card";
 import {
   countPositiveProgress,
   getProgress,
   saveProgress,
-  shuffle,
-} from "@/lib/utils";
-import { CornerUpLeftIcon, CornerUpRightIcon } from "lucide-react";
-import { FC, useState } from "react";
-import LearnDeckCompleted from "./completed";
-import { get } from "http";
-import FeedbackButton from "./feedback-button";
-import FlipableCard from "./flipable-card";
+} from "@/lib/localStorage";
 
 interface LearnDeckProps {
   deck: Deck;

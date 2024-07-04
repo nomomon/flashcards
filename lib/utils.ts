@@ -13,26 +13,3 @@ export function shuffle<T>(array: T[]): T[] {
   }
   return newArray;
 }
-
-export const getProgress = (deckId: Deck["id"]) => {
-  return JSON.parse(localStorage.getItem(`progress_${deckId}`) || "{}");
-};
-
-export const saveProgress = (
-  deckId: Deck["id"],
-  wordId: string,
-  progress: 0 | 1,
-) => {
-  const key = `progress_${deckId}`;
-  const currentProgress = getProgress(deckId);
-  currentProgress[wordId] = progress;
-  localStorage.setItem(key, JSON.stringify(currentProgress));
-};
-
-export const clearProgress = (deckId: string) => {
-  localStorage.setItem(`progress_${deckId}`, "{}");
-};
-
-export const countPositiveProgress = (progress: DeckProgress) => {
-  return Object.values(progress).filter((p) => p === 1).length;
-};

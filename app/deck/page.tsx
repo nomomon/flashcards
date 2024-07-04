@@ -5,8 +5,8 @@ import { getDeck } from "@/lib/backend";
 import { useSearchParams } from "next/navigation";
 import LearnDeck from "@/components/templates/learn";
 import LearnDeckLoading from "@/components/templates/learn/loading";
-import { getProgress } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
+import { getProgress } from "@/lib/localStorage";
 
 const DeckPage = () => {
   const searchParams = useSearchParams();

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { clearProgress } from "@/lib/utils";
+import { clearProgress } from "@/lib/localStorage";
 import { FC } from "react";
 
 interface LearnDeckCompletedProps {
