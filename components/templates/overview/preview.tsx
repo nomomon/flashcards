@@ -8,6 +8,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import React, { FC } from "react";
 
@@ -24,7 +25,14 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
       <DrawerContent className="bg-muted h-[calc(100vh-2rem)] max-w-lg mx-auto">
         <DrawerHeader>
           <DrawerTitle>{deck.name}</DrawerTitle>
-          <DrawerDescription>{deck.words.length} word pairs</DrawerDescription>
+          <DrawerDescription>
+            <div>{deck.words.length} word pairs</div>
+            <div className="flex gap-1 items-center">
+              {deck.languages.front.slice(0, 2).toUpperCase()}
+              <ArrowRightIcon className="w-4 h-4" />
+              {deck.languages.back.slice(0, 2).toUpperCase()}
+            </div>
+          </DrawerDescription>
         </DrawerHeader>
         <div className="p-4 flex flex-col gap-2 max-h-[90vh] overflow-scroll">
           {deck.words.map((wordPair, idx) => (

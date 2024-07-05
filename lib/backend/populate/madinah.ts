@@ -6,6 +6,10 @@ const deck: Deck = {
   id: "arabic",
   name: "Madinah Arabic 1",
   color: "#228C22",
+  languages: {
+    front: "Arabic",
+    back: "English",
+  },
   words: [
     {
       front: "بَيْتٌ",
@@ -173,16 +177,6 @@ const deck: Deck = {
       tags: ["lesson_2"],
     },
     {
-      front: "هَذِهِ",
-      back: "this (f)",
-      tags: ["lesson_2"],
-    },
-    {
-      front: "تِلْكَ",
-      back: "that (f)",
-      tags: ["lesson_2"],
-    },
-    {
       front: "إِمَامٌ",
       back: "imam",
       tags: ["lesson_2"],
@@ -206,6 +200,161 @@ const deck: Deck = {
       front: "وَ",
       back: "and",
       tags: ["lesson_2"],
+    },
+    {
+      front: "البَيْتُ",
+      back: "the house",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "القَمَرُ",
+      back: "the moon",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "الشَّمْسُ",
+      back: "the sun",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "البَبُ مَفْتُوحٌ",
+      back: "the door is open",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "القَلَمُ مَكْسُوْرٌ",
+      back: "the pen is broken",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "فَقِيْرٌ",
+      back: "poor",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "غَنِيٌّ",
+      back: "rich",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "قَصِيْرٌ",
+      back: "short",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "طَوِيْلٌّ",
+      back: "tall",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "حَارٌّ",
+      back: "hot",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "وَاقِفٌ",
+      back: "standing",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "جَالِسٌ",
+      back: "sitting",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "قَدِيْمٌ",
+      back: "old",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "جَدِيْدٌ",
+      back: "new",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "بَعِيْدٌ",
+      back: "far away",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "قَرِيْبٌ",
+      back: "near",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "وَسِخٌ",
+      back: "dirty",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "نَظِيْفٌ",
+      back: "clean",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "كَبِيْرٌ",
+      back: "big",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "صَغِيْرٌ",
+      back: "small",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "ثَقِيْلٌ",
+      back: "heavy",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "جَفِيْفٌ",
+      back: "light",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "المَاءُ",
+      back: "the water",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "الوَرَقُ",
+      back: "the paper",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "جَمِيْلٌ",
+      back: "beautiful",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "التُّفَّاحُ",
+      back: "the apple",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "حُلْوٌ",
+      back: "sweet",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "الدُّكَّانُ",
+      back: "the shop",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "مَرِيْضٌ",
+      back: "sick",
+      tags: ["lesson_3"],
+    },
+    {
+      front: "هَذِهِ",
+      back: "this (♀)",
+      tags: ["lesson_6"],
+    },
+    {
+      front: "تِلْكَ",
+      back: "that (♀)",
+      tags: ["lesson_7"],
     },
   ],
 };

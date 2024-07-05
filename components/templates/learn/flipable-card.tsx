@@ -21,14 +21,14 @@ const FlipableCard: FC<FlipableCardProps> = ({ front, back }) => {
       <div
         key={front}
         data-flipped="false"
-        className={`w-full h-full  justify-center items-center flipable-card flex data-[flipped=true]:hidden`}
+        className={`w-full h-full text-center justify-center items-center flipable-card flex data-[flipped=true]:hidden`}
       >
         {front}
       </div>
       <div
         key={back}
         data-flipped="false"
-        className={`w-full h-full justify-center items-center flipable-card hidden data-[flipped=true]:flex`}
+        className={`w-full h-full text-center justify-center items-center flipable-card hidden data-[flipped=true]:flex`}
       >
         {back}
       </div>
