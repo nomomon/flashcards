@@ -7,7 +7,7 @@ const OverviewLoading = () => {
         <Skeleton className="w-24 h-8" />
       </div>
       <div className="w-full grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {[...Array(8)].map((_, i) => (
+        {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="rounded-md aspect-square" />
         ))}
       </div>
