@@ -1,7 +1,7 @@
 {
-  "name": "Learning Arabic",
-  "short_name": "Learn Arabic",
-  "description": "Learn Arabic with this app",
+  "name": "Arabic Flashcards",
+  "short_name": "Arabic Flashcards",
+  "description": "Flashcards app for learning Arabic.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fff",
