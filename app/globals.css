@@ -85,3 +85,8 @@
     stroke-dashoffset: 0;
   }
 }
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
