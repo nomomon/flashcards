@@ -3,6 +3,7 @@ import { AlignLeftIcon, BookTypeIcon } from "lucide-react";
 import { useState } from "react";
 import DeckPreview from "./preview";
 import ForceUpdateButton from "./force-update";
+import OverviewLoading from "./loading";
 
 interface OverviewTemplateProps {
   data: Deck[];
@@ -10,6 +11,10 @@ interface OverviewTemplateProps {
 
 const OverviewTemplate: React.FC<OverviewTemplateProps> = ({ data }) => {
   const [selectedDeck, setSelectedDeck] = useState<Deck>();
+
+  if (!data || data.length === 0) {
+    return <OverviewLoading />;
+  }
 
   return (
     <>
