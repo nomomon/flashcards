@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { AlignLeftIcon, BrainCircuitIcon } from "lucide-react";
+import { AlignLeftIcon, BookTypeIcon } from "lucide-react";
 import { useState } from "react";
 import DeckPreview from "./preview";
 import ForceUpdateButton from "./force-update";
@@ -27,9 +27,9 @@ const OverviewTemplate: React.FC<OverviewTemplateProps> = ({ data }) => {
             style={{ backgroundColor: deck.color || "#aaa" }}
             onClick={() => setSelectedDeck(deck)}
           >
-            <h2 className="text-xl font-semibold">{deck.name}</h2>
+            <h2 className="text-lg font-semibold">{deck.name}</h2>
             <div className="mx-auto opacity-40">
-              <BrainCircuitIcon className="w-16 h-16 stroke-1" />
+              <BookTypeIcon className="w-12 h-12 stroke-1" />
             </div>
             <div className="flex items-center gap-2">
               <span>{deck.words.length}</span>
