@@ -347,6 +347,51 @@ const deck: Deck = {
       tags: ["lesson_3"],
     },
     {
+      front: "أَيْنَ",
+      back: "where",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "عَلَى",
+      back: "on",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "السَّمَءُ",
+      back: "the sky",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "الفَصْلُ",
+      back: "the classroom",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "غُرْفَةٌ",
+      back: "room",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "الحَمَّامُ",
+      back: "the bathroom",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "المِرْحَاضُ",
+      back: "the toilet",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "المَطْبَخُ",
+      back: "kitchen",
+      tags: ["lesson_4"],
+    },
+    {
+      front: "فِي",
+      back: "in",
+      tags: ["lesson_4"],
+    },
+    {
       front: "هَذِهِ",
       back: "this (♀)",
       tags: ["lesson_6"],
