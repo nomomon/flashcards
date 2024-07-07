@@ -1,19 +1,16 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
 import _ from "lodash";
-import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import React, { FC, useState } from "react";
 import Tags from "./preview-tags";
+import LanguageDirection from "./preview-language";
 
 interface DeckPreviewProps {
   deck: Deck;
@@ -29,6 +26,7 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
   const filteredWords = deck.words.filter((wordPair) =>
     selectedTags.some((tag) => wordPair.tags.includes(tag)),
   );
+  const [languageDirection, setLanguageDirection] = useState<number>(0);
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -40,6 +38,10 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
     }
   };
 
+  const handleLanguageDirectionChange = () => {
+    setLanguageDirection((languageDirection) => (languageDirection + 1) % 3);
+  };
+
   return (
     <Drawer open={!!deck} onClose={close}>
       <DrawerContent className="bg-muted h-[calc(100vh-2rem)] max-w-lg mx-auto focus:outline-none">
@@ -49,11 +51,12 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
             <div className="text-muted-foreground">
               {filteredWords.length} word pairs
             </div>
-            <div className="flex gap-1 items-center text-muted-foreground max-sm:justify-center">
-              {deck.languages.front.slice(0, 2).toUpperCase()}
-              <ArrowRightIcon className="w-4 h-4" />
-              {deck.languages.back.slice(0, 2).toUpperCase()}
-            </div>
+            <LanguageDirection
+              front={deck.languages.front}
+              back={deck.languages.back}
+              languageDirection={languageDirection}
+              changeLanguageDirection={handleLanguageDirectionChange}
+            />
             <Tags
               tags={uniqueTags}
               selectedTags={selectedTags}
