@@ -12,7 +12,8 @@ import {
 import _ from "lodash";
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
+import Tags from "./preview-tags";
 
 interface DeckPreviewProps {
   deck: Deck;
@@ -21,8 +22,23 @@ interface DeckPreviewProps {
 
 const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
   const close = () => setSelectedDeck(undefined);
+  const uniqueTags = _.uniq(
+    deck.words.flatMap((wordPair) => wordPair.tags),
+  ).sort();
+  const [selectedTags, setSelectedTags] = useState<string[]>(uniqueTags);
+  const filteredWords = deck.words.filter((wordPair) =>
+    selectedTags.some((tag) => wordPair.tags.includes(tag)),
+  );
 
-  const uniqueTags = _.uniq(deck.words.flatMap((wordPair) => wordPair.tags));
+  const handleTagClick = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(
+        selectedTags.filter((selectedTag) => selectedTag !== tag),
+      );
+    } else {
+      setSelectedTags([...selectedTags, tag].sort());
+    }
+  };
 
   return (
     <Drawer open={!!deck} onClose={close}>
@@ -31,24 +47,22 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
           <DrawerTitle>{deck.name}</DrawerTitle>
           <div className="w-full flex flex-col gap-2 text-sm overflow-hidden">
             <div className="text-muted-foreground">
-              {deck.words.length} word pairs
+              {filteredWords.length} word pairs
             </div>
             <div className="flex gap-1 items-center text-muted-foreground max-sm:justify-center">
               {deck.languages.front.slice(0, 2).toUpperCase()}
               <ArrowRightIcon className="w-4 h-4" />
               {deck.languages.back.slice(0, 2).toUpperCase()}
             </div>
-            <div className="max-w-full overflow-hidden">
-              <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-                {uniqueTags.map((tag, idx) => (
-                  <Badge key={idx}>#{tag}</Badge>
-                ))}
-              </div>
-            </div>
+            <Tags
+              tags={uniqueTags}
+              selectedTags={selectedTags}
+              onClick={handleTagClick}
+            />
           </div>
         </DrawerHeader>
         <div className="p-4 flex flex-col gap-2 max-h-[90vh] overflow-scroll">
-          {deck.words.map((wordPair, idx) => (
+          {filteredWords.map((wordPair, idx) => (
             <div
               key={idx}
               className="flex justify-between bg-background px-4 py-2 rounded-md"
