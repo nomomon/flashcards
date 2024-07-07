@@ -12,6 +12,7 @@ const DeckPage = () => {
   const searchParams = useSearchParams();
   const deckId = searchParams.get("deckId") || "";
   const tags = searchParams.get("tags")?.split(",") || [];
+  const languageDirection = searchParams.get("languageDirection") || "0";
   const deckProgress = getProgress(deckId);
 
   const [deck, setDeck] = useState<Deck>();
@@ -22,6 +23,19 @@ const DeckPage = () => {
           d.words = d.words.filter((wordPair) =>
             tags.some((tag) => wordPair.tags.includes(tag)),
           );
+        }
+        if (languageDirection != "0") {
+          const flippedWords = d.words.map((wordPair) => ({
+            ...wordPair,
+            front: wordPair.back,
+            back: wordPair.front,
+          }));
+          if (languageDirection == "1") {
+            d.words = flippedWords;
+          }
+          if (languageDirection == "2") {
+            d.words = d.words.concat(flippedWords);
+          }
         }
         setDeck(d);
       })
