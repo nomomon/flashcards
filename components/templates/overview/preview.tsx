@@ -74,7 +74,11 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
         </div>
         <DrawerFooter>
           <Button variant="outline" className="invert" asChild>
-            <Link href={`/deck?deckId=${deck.id}`}>Learn these words</Link>
+            <Link
+              href={`/deck?deckId=${deck.id}&tags=${selectedTags.join(",")}`}
+            >
+              Learn these words
+            </Link>
           </Button>
           <Button onClick={close} variant="outline">
             Close

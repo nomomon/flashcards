@@ -35,7 +35,7 @@ const LearnDeck: FC<LearnDeckProps> = ({ deck, deckProgress }) => {
   if (wordList.length === 0) {
     return (
       <LearnDeckCompleted
-        correctCount={countPositiveProgress(getProgress(deck.id))}
+        correctCount={countPositiveProgress(deck, getProgress(deck.id))}
         totalCount={deck.words.length}
         deckId={deck.id}
       />

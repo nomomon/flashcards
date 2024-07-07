@@ -123,7 +123,7 @@ const deck: Deck = {
     },
     {
       front: "مِنْدِيْلٌ",
-      back: "kerchief",
+      back: "handkerchief",
       tags: ["lesson_1"],
     },
     {

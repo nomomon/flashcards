@@ -19,8 +19,11 @@ export const clearProgress = (deckId: string) => {
   localStorage.setItem(`progress_${deckId}`, "{}");
 };
 
-export const countPositiveProgress = (progress: DeckProgress) => {
-  return Object.values(progress).filter((p) => p === 1).length;
+export const countPositiveProgress = (deck: Deck, progress: DeckProgress) => {
+  const includedWords = deck.words.map((word) => word.front);
+  return Object.entries(progress).filter(
+    ([k, v], i) => v == 1 && includedWords.includes(k),
+  ).length;
 };
 
 export const wasLastUpdateToday = () => {

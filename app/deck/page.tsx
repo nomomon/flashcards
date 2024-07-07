@@ -11,12 +11,18 @@ import { getProgress } from "@/lib/localStorage";
 const DeckPage = () => {
   const searchParams = useSearchParams();
   const deckId = searchParams.get("deckId") || "";
+  const tags = searchParams.get("tags")?.split(",") || [];
   const deckProgress = getProgress(deckId);
 
   const [deck, setDeck] = useState<Deck>();
   useEffect(() => {
     getDeck(deckId)
       .then((d) => {
+        if (tags) {
+          d.words = d.words.filter((wordPair) =>
+            tags.some((tag) => wordPair.tags.includes(tag)),
+          );
+        }
         setDeck(d);
       })
       .catch((e) => {
