@@ -307,7 +307,7 @@ const deck: Deck = {
       tags: ["lesson_3"],
     },
     {
-      front: "جَفِيْفٌ",
+      front: "خَفِيْفٌ",
       back: "light",
       tags: ["lesson_3"],
     },
