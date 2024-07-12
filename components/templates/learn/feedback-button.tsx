@@ -14,6 +14,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
   return (
     <div
       onClick={onClick}
+      aria-label={text}
       className="flex items-center justify-center flex-col cursor-pointer text-muted-foreground select-none"
     >
       {children}

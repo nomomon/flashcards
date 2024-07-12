@@ -20,6 +20,7 @@ const FlipableCard: FC<FlipableCardProps> = ({ front, back }) => {
     >
       <div
         key={front}
+        aria-label={front}
         data-flipped="false"
         className={`w-full h-full text-center justify-center items-center flipable-card flex data-[flipped=true]:hidden`}
       >
@@ -27,6 +28,7 @@ const FlipableCard: FC<FlipableCardProps> = ({ front, back }) => {
       </div>
       <div
         key={back}
+        aria-label={back}
         data-flipped="false"
         className={`w-full h-full text-center justify-center items-center flipable-card hidden data-[flipped=true]:flex`}
       >

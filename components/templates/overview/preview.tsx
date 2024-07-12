@@ -78,12 +78,17 @@ const DeckPreview: FC<DeckPreviewProps> = ({ deck, setSelectedDeck }) => {
         <DrawerFooter>
           <Button variant="outline" className="invert" asChild>
             <Link
+              aria-label="Learn these words"
               href={`/deck?deckId=${deck.id}&tags=${selectedTags.join(",")}&languageDirection=${languageDirection}`}
             >
               Learn these words
             </Link>
           </Button>
-          <Button onClick={close} variant="outline">
+          <Button
+            onClick={close}
+            variant="outline"
+            aria-label="Close deck preview"
+          >
             Close
           </Button>
         </DrawerFooter>

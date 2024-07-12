@@ -31,6 +31,7 @@ const OverviewTemplate: React.FC<OverviewTemplateProps> = ({ data }) => {
             )}
             style={{ backgroundColor: deck.color || "#aaa" }}
             onClick={() => setSelectedDeck(deck)}
+            aria-label={`Open deck ${deck.name}`}
           >
             <h2 className="text-lg font-semibold">{deck.name}</h2>
             <div className="mx-auto opacity-40">
