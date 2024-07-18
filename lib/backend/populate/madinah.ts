@@ -252,6 +252,11 @@ const deck: Deck = {
       tags: ["lesson_3"],
     },
     {
+      front: "بَارِدٌّ",
+      back: "cold",
+      tags: ["lesson_3"],
+    },
+    {
       front: "وَاقِفٌ",
       back: "standing",
       tags: ["lesson_3"],

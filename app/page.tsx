@@ -4,6 +4,7 @@ import { getDecks } from "@/lib/backend";
 import { wasLastUpdateToday } from "@/lib/localStorage";
 import { useEffect, useState } from "react";
 // import "@/lib/backend/populate/madinah";
+// import "@/lib/backend/populate/madinah_ru";
 
 export default function Home() {
   const [data, setData] = useState<Deck[]>([]);
