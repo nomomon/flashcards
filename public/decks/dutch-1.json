@@ -1,0 +1,354 @@
+{
+    "id": "dutch-1",
+    "name": "Dutch",
+    "color": "#FF4F00",
+    "languages": {
+        "front": "Dutch",
+        "back": "English"
+    },
+    "words": [
+        {
+            "front": "ik",
+            "back": "I",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "ik heet",
+            "back": "my name is",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "ik ben",
+            "back": "I am",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "een",
+            "back": "a",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "de",
+            "back": "the",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "het",
+            "back": "the",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "de man",
+            "back": "the man",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "de vrouw",
+            "back": "the woman",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "de jongen",
+            "back": "the boy",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "het meisje",
+            "back": "the girl",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "het huis",
+            "back": "the house",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "hallo",
+            "back": "hello",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "hoi",
+            "back": "hi",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "goed",
+            "back": "good",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "slecht",
+            "back": "bad",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "morgen",
+            "back": "morning",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "morgen",
+            "back": "tomorrow",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "goedemorgen",
+            "back": "good morning",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "avond",
+            "back": "evening",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "goedenavond",
+            "back": "good evening",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "dag",
+            "back": "day",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "goedendag",
+            "back": "good day !",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "tot ziens",
+            "back": "see you",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "tot",
+            "back": "until",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "doei",
+            "back": "bye",
+            "tags": [
+                "introduction"
+            ]
+        },
+        {
+            "front": "alsjeblieft (a.u.b.)",
+            "back": "here you are / please",
+            "tags": [
+                "thank"
+            ]
+        },
+        {
+            "front": "alstublieft",
+            "back": "here you are (formal)",
+            "tags": [
+                "thank"
+            ]
+        },
+        {
+            "front": "dank je wel",
+            "back": "thank you",
+            "tags": [
+                "thank"
+            ]
+        },
+        {
+            "front": "ja",
+            "back": "yes",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "nee",
+            "back": "no",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "niet",
+            "back": "not",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "roken",
+            "back": "to smoke",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "wel",
+            "back": "(confirmative)",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "misschien",
+            "back": "maybe",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "links",
+            "back": "left",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "rechts",
+            "back": "right",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "of",
+            "back": "or",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "en",
+            "back": "and",
+            "tags": [
+                "l1"
+            ]
+        },
+        {
+            "front": "jij",
+            "back": "you",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "je",
+            "back": "you",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "hij",
+            "back": "he",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "zij",
+            "back": "she",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "ze",
+            "back": "she",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "wij",
+            "back": "we",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "we",
+            "back": "we",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "jullie",
+            "back": "you",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "zij",
+            "back": "they",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "ze",
+            "back": "they",
+            "tags": [
+                "pronouns"
+            ]
+        },
+        {
+            "front": "u",
+            "back": "you",
+            "tags": [
+                "pronouns"
+            ]
+        }
+    ]
+}
