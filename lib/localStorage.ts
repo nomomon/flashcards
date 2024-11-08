@@ -1,4 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
+import { Deck } from "./interfaces/Deck";
+import { DeckProgress } from "./interfaces/DeckProgress";
 
 export const getProgress = (deckId: Deck["id"]) => {
   return JSON.parse(localStorage.getItem(`progress_${deckId}`) || "{}");

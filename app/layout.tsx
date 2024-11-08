@@ -6,33 +6,33 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 
 const fontSans = FontSans({
-    subsets: ["latin"],
-    variable: "--font-sans",
+  subsets: ["latin"],
+  variable: "--font-sans",
 });
 export const metadata: Metadata = {
-    title: "Flashcards",
-    description: "A simple flashcards app for learning",
+  title: "Flashcards",
+  description: "A simple flashcards app for learning",
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <html lang="en" suppressHydrationWarning>
-            <head>
-                <link rel="icon" href="/favicon.png" type="image/png" />
-            </head>
-            <body
-                className={cn(
-                    "min-h-screen bg-background font-sans antialiased",
-                    fontSans.variable,
-                )}
-            >
-                <main className="max-w-3xl mx-auto px-4 py-8">{children}</main>
-                <Toaster />
-            </body>
-        </html>
-    );
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.png" type="image/png" />
+      </head>
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable,
+        )}
+      >
+        <main className="max-w-3xl mx-auto px-4 py-8">{children}</main>
+        <Toaster />
+      </body>
+    </html>
+  );
 }

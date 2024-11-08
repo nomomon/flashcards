@@ -7,6 +7,7 @@ import LearnDeck from "@/components/templates/learn";
 import LearnDeckLoading from "@/components/templates/learn/loading";
 import { toast } from "@/components/ui/use-toast";
 import { getProgress } from "@/lib/localStorage";
+import { Deck } from "@/lib/interfaces/Deck";
 
 const DeckPage = () => {
   const searchParams = useSearchParams();

@@ -1,5 +1,5 @@
 export interface WordPair {
-    front: string;
-    back: string;
-    tags: string[];
+  front: string;
+  back: string;
+  tags: string[];
 }

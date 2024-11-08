@@ -1,3 +1,3 @@
 export interface DeckProgress {
-    [key: string]: 0 | 1;
+  [key: string]: 0 | 1;
 }

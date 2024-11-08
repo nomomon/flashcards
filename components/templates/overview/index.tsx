@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
-import { AlignLeftIcon, BookTypeIcon } from "lucide-react";
+import { AlignLeftIcon, PawPrint } from "lucide-react";
 import { useState } from "react";
 import DeckPreview from "./preview";
 import ForceUpdateButton from "./force-update";
 import OverviewLoading from "./loading";
+import { Deck } from "@/lib/interfaces/Deck";
 
 interface OverviewTemplateProps {
   data: Deck[];
@@ -35,7 +36,7 @@ const OverviewTemplate: React.FC<OverviewTemplateProps> = ({ data }) => {
           >
             <h2 className="text-lg font-semibold">{deck.name}</h2>
             <div className="mx-auto opacity-40">
-              <BookTypeIcon className="w-12 h-12 stroke-1" />
+              <PawPrint className="w-12 h-12 stroke-1" />
             </div>
             <div className="flex items-center gap-2">
               <span>{deck.words.length}</span>

@@ -11,6 +11,9 @@ import {
   getProgress,
   saveProgress,
 } from "@/lib/localStorage";
+import { WordPair } from "@/lib/interfaces/WordPair";
+import { DeckProgress } from "@/lib/interfaces/DeckProgress";
+import { Deck } from "@/lib/interfaces/Deck";
 
 interface LearnDeckProps {
   deck: Deck;
