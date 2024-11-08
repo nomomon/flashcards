@@ -11,6 +11,7 @@ import Link from "next/link";
 import React, { FC, useState } from "react";
 import Tags from "./preview-tags";
 import LanguageDirection from "./preview-language";
+import { Deck } from "@/lib/interfaces/Deck";
 
 interface DeckPreviewProps {
   deck: Deck;

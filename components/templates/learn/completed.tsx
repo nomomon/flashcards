@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Deck } from "@/lib/interfaces/Deck";
 import { clearProgress } from "@/lib/localStorage";
 import { FC } from "react";
 
