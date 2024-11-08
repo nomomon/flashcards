@@ -1,0 +1,16 @@
+{
+    "id": "dutch-1",
+    "name": "Dutch",
+    "color": "#228C22",
+    "languages": {
+        "front": "Dutch",
+        "back": "English"
+    },
+    "words": [
+        {
+            "front": "Ik ben een student",
+            "back": "I am a student",
+            "tags": []
+        }
+    ]
+}

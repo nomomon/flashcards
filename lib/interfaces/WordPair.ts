@@ -1,5 +1,5 @@
-interface WordPair {
-  front: string;
-  back: string;
-  tags: string[];
+export interface WordPair {
+    front: string;
+    back: string;
+    tags: string[];
 }

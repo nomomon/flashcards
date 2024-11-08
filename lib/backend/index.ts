@@ -11,6 +11,7 @@ import {
     getDocsFromCache,
     setDoc,
 } from "firebase/firestore";
+import { Deck } from "../interfaces/Deck";
 
 const firebaseConfig = {
     apiKey: "REDACTED_FIREBASE_WEB_API_KEY",
