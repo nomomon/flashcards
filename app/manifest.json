@@ -1,16 +1,16 @@
 {
-  "name": "Arabic Flashcards",
-  "short_name": "Arabic Flashcards",
-  "description": "Flashcards app for learning Arabic.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#fff",
-  "theme_color": "#fff",
-  "icons": [
-    {
-      "src": "/favicon.png",
-      "sizes": "any",
-      "type": "image/png"
-    }
-  ]
+    "name": "Flashcards",
+    "short_name": "Flashcards",
+    "description": "Flashcards app for learning",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#fff",
+    "theme_color": "#fff",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "any",
+            "type": "image/png"
+        }
+    ]
 }

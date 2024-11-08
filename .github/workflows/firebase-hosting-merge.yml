@@ -17,4 +17,4 @@ jobs:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_LEARNING_ARABIC_95EC9 }}"
           channelId: live
-          projectId: learning-arabic-95ec9
+          projectId: learning-flashcards-95ec9
