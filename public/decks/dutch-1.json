@@ -349,6 +349,188 @@
             "tags": [
                 "pronouns"
             ]
+        },
+        {
+            "front": "zijn",
+            "back": "to be",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de leraar",
+            "back": "the teacher",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "blij",
+            "back": "happy",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "leuk",
+            "back": "funny",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "mooi",
+            "back": "pretty",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "oud",
+            "back": "old",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "jong",
+            "back": "young",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de voetballer",
+            "back": "the football player",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de premier",
+            "back": "the prime minister",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de student",
+            "back": "the student",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de leerling",
+            "back": "the scholar",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de baas",
+            "back": "the boss",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de bakker",
+            "back": "the baker",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de slager",
+            "back": "the butcher",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de boer",
+            "back": "the farmer",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de visser",
+            "back": "the fisherman",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de advocaat",
+            "back": "the lawyer",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de dokter",
+            "back": "the doctor",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de ober",
+            "back": "the waiter",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de politieman",
+            "back": "the police officer",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de agent",
+            "back": "the police officer",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de kapper",
+            "back": "the hairdresser",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de directeur",
+            "back": "the (company) director",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de boekhouder",
+            "back": "the accountant",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de verkoper",
+            "back": "the salesman",
+            "tags": [
+                "lesson3"
+            ]
+        },
+        {
+            "front": "de vertegenwoordiger",
+            "back": "the representative",
+            "tags": [
+                "lesson3"
+            ]
         }
     ]
 }
