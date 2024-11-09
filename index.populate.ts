@@ -4,23 +4,32 @@ import { updateDeck } from "./lib/backend";
 
 const decksDir = join(__dirname, "public/decks");
 
-try {
-    const files = readdirSync(decksDir);
-    files.forEach((file) => {
-        if (file.endsWith(".json")) {
-            try {
-                const filePath = join(decksDir, file);
-                const fileContent = readFileSync(filePath, "utf8");
-                const deck = JSON.parse(fileContent);
-                updateDeck(deck);
-            } catch (error) {
-                console.error(`Error processing file ${file}:`, error);
-            }
-        }
-    });
-} catch (error) {
-    console.error("Error reading decks directory:", error);
+async function uploadFiles(files: string[]) {
+  for (const file of files) {
+    if (file.endsWith(".json")) {
+      try {
+        const filePath = join(decksDir, file);
+        const fileContent = readFileSync(filePath, "utf8");
+        const deck = JSON.parse(fileContent);
+        await updateDeck(deck);
+        console.log(`✅ Deck ${deck.id} updated, ${deck.words.length} cards`);
+      } catch (error) {
+        console.error(`🛑 Deck failed to update,`, error);
+      }
+    }
+  }
 }
 
-console.log("Decks populated");
-process.exit();
+async function populateDecks() {
+  try {
+    const files = readdirSync(decksDir);
+    await uploadFiles(files);
+  } catch (error) {
+    console.error("Error reading decks directory:", error);
+  }
+
+  console.log("Decks populated");
+  process.exit();
+}
+
+populateDecks();

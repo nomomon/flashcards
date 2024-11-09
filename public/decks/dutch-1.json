@@ -1,536 +1,521 @@
 {
-    "id": "dutch-1",
-    "name": "Dutch",
-    "color": "#FF4F00",
-    "languages": {
-        "front": "Dutch",
-        "back": "English"
+  "id": "dutch-1",
+  "name": "Dutch",
+  "color": "#FF4F00",
+  "languages": {
+    "front": "Dutch",
+    "back": "English"
+  },
+  "words": [
+    {
+      "front": "ik",
+      "back": "I",
+      "tags": ["introduction"]
     },
-    "words": [
-        {
-            "front": "ik",
-            "back": "I",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "ik heet",
-            "back": "my name is",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "ik ben",
-            "back": "I am",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "een",
-            "back": "a",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "de",
-            "back": "the",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "het",
-            "back": "the",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "de man",
-            "back": "the man",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "de vrouw",
-            "back": "the woman",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "de jongen",
-            "back": "the boy",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "het meisje",
-            "back": "the girl",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "het huis",
-            "back": "the house",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "hallo",
-            "back": "hello",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "hoi",
-            "back": "hi",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "goed",
-            "back": "good",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "slecht",
-            "back": "bad",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "morgen",
-            "back": "morning",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "morgen",
-            "back": "tomorrow",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "goedemorgen",
-            "back": "good morning",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "avond",
-            "back": "evening",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "goedenavond",
-            "back": "good evening",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "dag",
-            "back": "day",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "goedendag",
-            "back": "good day !",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "tot ziens",
-            "back": "see you",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "tot",
-            "back": "until",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "doei",
-            "back": "bye",
-            "tags": [
-                "introduction"
-            ]
-        },
-        {
-            "front": "alsjeblieft (a.u.b.)",
-            "back": "here you are / please",
-            "tags": [
-                "thank"
-            ]
-        },
-        {
-            "front": "alstublieft",
-            "back": "here you are (formal)",
-            "tags": [
-                "thank"
-            ]
-        },
-        {
-            "front": "dank je wel",
-            "back": "thank you",
-            "tags": [
-                "thank"
-            ]
-        },
-        {
-            "front": "ja",
-            "back": "yes",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "nee",
-            "back": "no",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "niet",
-            "back": "not",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "roken",
-            "back": "to smoke",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "wel",
-            "back": "(confirmative)",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "misschien",
-            "back": "maybe",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "links",
-            "back": "left",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "rechts",
-            "back": "right",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "of",
-            "back": "or",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "en",
-            "back": "and",
-            "tags": [
-                "l1"
-            ]
-        },
-        {
-            "front": "jij",
-            "back": "you",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "je",
-            "back": "you",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "hij",
-            "back": "he",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "zij",
-            "back": "she",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "ze",
-            "back": "she",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "wij",
-            "back": "we",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "we",
-            "back": "we",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "jullie",
-            "back": "you",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "zij",
-            "back": "they",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "ze",
-            "back": "they",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "u",
-            "back": "you",
-            "tags": [
-                "pronouns"
-            ]
-        },
-        {
-            "front": "zijn",
-            "back": "to be",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de leraar",
-            "back": "the teacher",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "blij",
-            "back": "happy",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "leuk",
-            "back": "funny",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "mooi",
-            "back": "pretty",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "oud",
-            "back": "old",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "jong",
-            "back": "young",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de voetballer",
-            "back": "the football player",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de premier",
-            "back": "the prime minister",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de student",
-            "back": "the student",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de leerling",
-            "back": "the scholar",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de baas",
-            "back": "the boss",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de bakker",
-            "back": "the baker",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de slager",
-            "back": "the butcher",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de boer",
-            "back": "the farmer",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de visser",
-            "back": "the fisherman",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de advocaat",
-            "back": "the lawyer",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de dokter",
-            "back": "the doctor",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de ober",
-            "back": "the waiter",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de politieman",
-            "back": "the police officer",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de agent",
-            "back": "the police officer",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de kapper",
-            "back": "the hairdresser",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de directeur",
-            "back": "the (company) director",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de boekhouder",
-            "back": "the accountant",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de verkoper",
-            "back": "the salesman",
-            "tags": [
-                "lesson3"
-            ]
-        },
-        {
-            "front": "de vertegenwoordiger",
-            "back": "the representative",
-            "tags": [
-                "lesson3"
-            ]
-        }
-    ]
+    {
+      "front": "ik heet",
+      "back": "my name is",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "ik ben",
+      "back": "I am",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "een",
+      "back": "a",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "de",
+      "back": "the",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "het",
+      "back": "the",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "de man",
+      "back": "the man",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "de vrouw",
+      "back": "the woman",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "de jongen",
+      "back": "the boy",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "het meisje",
+      "back": "the girl",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "het huis",
+      "back": "the house",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "hallo",
+      "back": "hello",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "hoi",
+      "back": "hi",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "goed",
+      "back": "good",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "slecht",
+      "back": "bad",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "morgen",
+      "back": "morning",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "morgen",
+      "back": "tomorrow",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "goedemorgen",
+      "back": "good morning",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "avond",
+      "back": "evening",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "goedenavond",
+      "back": "good evening",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "dag",
+      "back": "day",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "goedendag",
+      "back": "good day !",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "tot ziens",
+      "back": "see you",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "tot",
+      "back": "until",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "doei",
+      "back": "bye",
+      "tags": ["introduction"]
+    },
+    {
+      "front": "alsjeblieft (a.u.b.)",
+      "back": "here you are / please",
+      "tags": ["thank"]
+    },
+    {
+      "front": "alstublieft",
+      "back": "here you are (formal)",
+      "tags": ["thank"]
+    },
+    {
+      "front": "dank je wel",
+      "back": "thank you",
+      "tags": ["thank"]
+    },
+    {
+      "front": "ja",
+      "back": "yes",
+      "tags": ["l1"]
+    },
+    {
+      "front": "nee",
+      "back": "no",
+      "tags": ["l1"]
+    },
+    {
+      "front": "niet",
+      "back": "not",
+      "tags": ["l1"]
+    },
+    {
+      "front": "roken",
+      "back": "to smoke",
+      "tags": ["l1"]
+    },
+    {
+      "front": "wel",
+      "back": "(confirmative)",
+      "tags": ["l1"]
+    },
+    {
+      "front": "misschien",
+      "back": "maybe",
+      "tags": ["l1"]
+    },
+    {
+      "front": "links",
+      "back": "left",
+      "tags": ["l1"]
+    },
+    {
+      "front": "rechts",
+      "back": "right",
+      "tags": ["l1"]
+    },
+    {
+      "front": "of",
+      "back": "or",
+      "tags": ["l1"]
+    },
+    {
+      "front": "en",
+      "back": "and",
+      "tags": ["l1"]
+    },
+    {
+      "front": "jij",
+      "back": "you",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "je",
+      "back": "you",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "hij",
+      "back": "he",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "zij",
+      "back": "she",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "ze",
+      "back": "she",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "wij",
+      "back": "we",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "we",
+      "back": "we",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "jullie",
+      "back": "you",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "zij",
+      "back": "they",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "ze",
+      "back": "they",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "u",
+      "back": "you",
+      "tags": ["pronouns"]
+    },
+    {
+      "front": "zijn",
+      "back": "to be",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de leraar",
+      "back": "the teacher",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "blij",
+      "back": "happy",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "leuk",
+      "back": "funny",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "mooi",
+      "back": "pretty",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "oud",
+      "back": "old",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "jong",
+      "back": "young",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de voetballer",
+      "back": "the football player",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de premier",
+      "back": "the prime minister",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de student",
+      "back": "the student",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de leerling",
+      "back": "the pupil",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de koning",
+      "back": "the king",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de baas",
+      "back": "the boss",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de bakker",
+      "back": "the baker",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de slager",
+      "back": "the butcher",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de boer",
+      "back": "the farmer",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de visser",
+      "back": "the fisherman",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de advocaat",
+      "back": "the lawyer",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de dokter",
+      "back": "the doctor",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de ober",
+      "back": "the waiter",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de politieman",
+      "back": "the police officer",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de agent",
+      "back": "the police officer",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de kapper",
+      "back": "the hairdresser",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de directeur",
+      "back": "the (company) director",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de boekhouder",
+      "back": "the accountant",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de verkoper",
+      "back": "the salesman",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "de vertegenwoordiger",
+      "back": "the representative",
+      "tags": ["lesson3"]
+    },
+    {
+      "front": "eten & drinken",
+      "back": "food & drinks",
+      "tags": ["food"]
+    },
+    {
+      "front": "de groente",
+      "back": "the vegetables",
+      "tags": ["food"]
+    },
+    {
+      "front": "het fruit",
+      "back": "the fruits",
+      "tags": ["food"]
+    },
+    {
+      "front": "het brood",
+      "back": "the bread",
+      "tags": ["food"]
+    },
+    {
+      "front": "de boterham",
+      "back": "the slice of bread",
+      "tags": ["food"]
+    },
+    {
+      "front": "de kaas",
+      "back": "the cheese",
+      "tags": ["food"]
+    },
+    {
+      "front": "de hagelslag",
+      "back": "the chocolate sprinkles",
+      "tags": ["food"]
+    },
+    {
+      "front": "de pindakaas",
+      "back": "the peanut butter",
+      "tags": ["food"]
+    },
+    {
+      "front": "de melk",
+      "back": "the milk",
+      "tags": ["food"]
+    },
+    {
+      "front": "de koffie",
+      "back": "the coffee",
+      "tags": ["food"]
+    },
+    {
+      "front": "de thee",
+      "back": "the tea",
+      "tags": ["food"]
+    },
+    {
+      "front": "de aardappel",
+      "back": "the potato",
+      "tags": ["food"]
+    },
+    {
+      "front": "de aardappeleter",
+      "back": "the potato-eater",
+      "tags": ["food"]
+    },
+    {
+      "front": "het bier",
+      "back": "the beer",
+      "tags": ["food"]
+    },
+    {
+      "front": "de wijn",
+      "back": "the wine",
+      "tags": ["food"]
+    },
+    {
+      "front": "het water",
+      "back": "the water",
+      "tags": ["food"]
+    },
+    {
+      "front": "het vlees",
+      "back": "the meat",
+      "tags": ["food"]
+    },
+    {
+      "front": "de kip",
+      "back": "the chicken",
+      "tags": ["food"]
+    },
+    {
+      "front": "de friet",
+      "back": "the French fries",
+      "tags": ["food"]
+    },
+    {
+      "front": "frietje met",
+      "back": "French fries with mayonnaise",
+      "tags": ["food"]
+    },
+    {
+      "front": "de frikandel",
+      "back": "Dutch meat sausage",
+      "tags": ["food"]
+    },
+    {
+      "front": "de kroket",
+      "back": "Dutch fried ragout bar",
+      "tags": ["food"]
+    },
+    {
+      "front": "de pannenkoek",
+      "back": "the pancake",
+      "tags": ["food"]
+    },
+    {
+      "front": "de stroopwafel",
+      "back": "the syrup waffle",
+      "tags": ["food"]
+    },
+    {
+      "front": "drop",
+      "back": "liquorice",
+      "tags": ["food"]
+    },
+    {
+      "front": "de, het snoep",
+      "back": "the sweets",
+      "tags": ["food"]
+    }
+  ]
 }
