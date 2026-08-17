@@ -5,10 +5,24 @@ import { HomeIcon, RotateCcwIcon, TriangleAlertIcon } from "lucide-react";
 import { buildLabel, commitUrl } from "@/build-info";
 import { Button } from "@/components/ui/button";
 
-/** The one page shell: mobile-first, centred, same padding on every route. */
+/**
+ * The one page shell: mobile-first, centred, same padding on every route.
+ *
+ * `overflow-x-clip` is here rather than around the study cards on purpose. A
+ * swiped card is transformed, and a transform extends the scrollable overflow of
+ * every ancestor, so throwing one off screen used to grow the document sideways
+ * and raise a scrollbar mid-gesture. Clipping closer to the card also worked,
+ * but it clipped at the *container* edge, so on any screen wider than the card
+ * the throw visibly stopped short instead of leaving the window.
+ *
+ * This element is viewport-wide, so clipping here means a card stays visible
+ * until it genuinely passes the edge of the screen. `clip` rather than `hidden`
+ * because it paints nothing outside the box without becoming a scroll container,
+ * which keeps this out of the scroll chain entirely.
+ */
 export function RootLayout() {
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh overflow-x-clip bg-background">
       <main className="mx-auto max-w-3xl px-4 pt-8">
         <Outlet />
       </main>

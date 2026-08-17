@@ -48,8 +48,20 @@ const TAP_SLOP = 4;
  */
 const TINT_OPACITY = 0.28;
 
-/** How far the card is thrown when it leaves. Comfortably off any viewport. */
-const FLY_OUT_DISTANCE = 640;
+/**
+ * How far a leaving card is thrown.
+ *
+ * One viewport width, which is always enough: the card starts centred, so its
+ * trailing edge is less than half a viewport from the middle, and travelling a
+ * full width clears the screen on any size. A fixed pixel distance cannot do
+ * this - 640px leaves the screen on a phone but stalls in plain sight on a
+ * desktop.
+ *
+ * Read when the throw begins rather than on mount, so a resize or a rotation
+ * between one card and the next needs no listener to stay correct.
+ */
+const flyOutDistance = () =>
+  typeof window === "undefined" ? 900 : window.innerWidth;
 
 const SPRING: Transition = { type: "spring", stiffness: 320, damping: 32 };
 const SPRING_BACK: Transition = { type: "spring", stiffness: 500, damping: 38 };
@@ -66,9 +78,10 @@ const INSTANT: Transition = { duration: 0 };
  */
 const FLY_OUT: Variants = {
   out: (direction: number) => ({
-    x: direction * FLY_OUT_DISTANCE,
-    opacity: 0,
-    transition: { duration: 0.28, ease: "easeOut" },
+    x: direction * flyOutDistance(),
+    // No fade: the card should look like it left, not like it dissolved on the
+    // way. Clipping at the viewport is what removes it from sight.
+    transition: { duration: 0.32, ease: [0.32, 0, 0.67, 0] },
   }),
 };
 
@@ -120,25 +133,19 @@ export function CardStack({
 
   return (
     /*
-     * The clip layer, and it is load-bearing rather than cosmetic.
+     * Nothing is clipped here, deliberately. A thrown card has to stay visible
+     * all the way to the edge of the *screen*, and any clip at this level cuts
+     * it off at the container instead - which on a wide viewport is nowhere near
+     * the edge. The horizontal clip that stops the page growing sideways lives
+     * on the page shell in `routes/root-layout.tsx`, which is viewport-wide.
      *
-     * A transform does not affect layout, but it *does* extend the scrollable
-     * overflow of every ancestor. So a card thrown 640px to the right, tilted
-     * 12 degrees, grew the document in both axes and the page sprouted a
-     * horizontal and a vertical scrollbar mid-swipe.
-     *
-     * Clipping here rather than hiding overflow on the body: the body is not
-     * where the problem is, and suppressing scrollbars globally would also
-     * suppress legitimate ones on a long deck page. `overflow-clip` (not
-     * `hidden`) because clip paints nothing outside the box without becoming a
-     * scroll container, so this element never joins the scroll chain.
-     *
-     * `-mx-4 px-4` cancels the page gutter so the clip edge is the container
-     * edge - which on a phone is the screen edge, making "thrown off screen"
-     * literally true. `py-10 -my-10` opens 40px above and below for the tilt to
-     * live in, without changing what the stack occupies in the layout.
+     * The vertical padding is still needed: a dragged card tilts, and its
+     * corners reach about 40px past the square. Giving that room here means the
+     * tilt never extends the document, so no vertical scrollbar appears either.
+     * The matching negative margin keeps the stack occupying the same space in
+     * the layout as the card itself.
      */
-    <div className="relative -mx-4 -my-10 overflow-clip px-4 py-10">
+    <div className="relative -my-10 py-10">
       <div className="relative mx-auto aspect-square w-full max-w-sm">
         {/* `initial={false}` keeps the stack from animating in on the first
             render; cards that join later still slide up from behind. */}
