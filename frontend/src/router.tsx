@@ -12,10 +12,29 @@ import {
 import { DeckPage } from "@/routes/deck-route";
 import { OverviewPage } from "@/routes/index-route";
 import { NotFoundPage, RootLayout, RouteErrorPage } from "@/routes/root-layout";
+import { StudyPage } from "@/routes/study-route";
+
+/**
+ * Route shape:
+ *
+ *   /                    the deck grid
+ *   /deck/$deckId        the deck's own page: word list, direction, start
+ *   /deck/$deckId/study  the session
+ *
+ * The deck used to open in a drawer over the grid, which capped how much could
+ * be shown and nested a scroll area inside the page's own. A real page has the
+ * whole viewport, and "back" means what a learner expects.
+ *
+ * The deck id is a path param rather than a search param because it identifies
+ * the resource; direction and tags stay in the search string because they are
+ * options on it, and they carry through to /study so a session survives a
+ * refresh and can be linked.
+ */
 
 /**
  * Tags normally travel as a JSON array (`?tags=["a","b"]`), but a hand-typed
- * `?tags=a,b` is accepted too. Anything else falls back to "all tags".
+ * `?tags=a,b` is accepted too. Anything else falls back to "all tags", which is
+ * also the default: tags are a filter, not a required choice.
  */
 const tagsSchema = z
   .union([z.array(z.string()), z.string().transform((raw) => raw.split(","))])
@@ -29,12 +48,14 @@ const tagsSchema = z
  * degrades to a typed default instead of throwing during render.
  */
 const deckSearchSchema = z.object({
-  deckId: z.string().catch(""),
   tags: tagsSchema,
   direction: z.enum(STUDY_DIRECTIONS).catch(DEFAULT_STUDY_DIRECTION),
 });
 
 export type DeckSearch = z.output<typeof deckSearchSchema>;
+
+const validateDeckSearch = (search: Record<string, unknown>): DeckSearch =>
+  deckSearchSchema.parse(search);
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -49,13 +70,19 @@ const indexRoute = createRoute({
 
 const deckRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/deck",
-  validateSearch: (search: Record<string, unknown>): DeckSearch =>
-    deckSearchSchema.parse(search),
+  path: "/deck/$deckId",
+  validateSearch: validateDeckSearch,
   component: DeckPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, deckRoute]);
+const studyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/deck/$deckId/study",
+  validateSearch: validateDeckSearch,
+  component: StudyPage,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, deckRoute, studyRoute]);
 
 export const router = createRouter({
   routeTree,

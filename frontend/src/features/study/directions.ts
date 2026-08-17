@@ -2,18 +2,22 @@ import type { DeckLanguages } from "@/types/deck";
 import type { StudyDirection } from "@/types/session";
 
 /**
- * The study directions, in the order they are offered to the learner. Declared
- * once here so the search-param schema and the picker cannot drift apart.
+ * The two study directions. Declared once here so the search-param schema, the
+ * direction switch and the queue builder cannot drift apart.
  */
 export const STUDY_DIRECTIONS = [
   "front-to-back",
   "back-to-front",
-  "both",
 ] as const satisfies readonly StudyDirection[];
 
 export const DEFAULT_STUDY_DIRECTION: StudyDirection = "front-to-back";
 
-/** Short two-letter labels, e.g. `NL → EN`, for the direction picker. */
+/** The other direction. The switch is a toggle, so this is all it needs. */
+export function flipDirection(direction: StudyDirection): StudyDirection {
+  return direction === "front-to-back" ? "back-to-front" : "front-to-back";
+}
+
+/** Language labels in the order this direction reads, e.g. Dutch then English. */
 export function directionEndpoints(
   languages: DeckLanguages,
   direction: StudyDirection,
@@ -31,5 +35,29 @@ export function describeDirection(
   direction: StudyDirection,
 ): string {
   const { from, to } = directionEndpoints(languages, direction);
-  return direction === "both" ? `${from} ↔ ${to}` : `${from} → ${to}`;
+  return `${from} → ${to}`;
+}
+
+/**
+ * Which side of a word is the prompt, and which is the answer, under this
+ * direction. Used by both the word list (column order) and the session, so the
+ * two always agree about what is being asked.
+ */
+export function orientWord<T extends { front: string; back: string }>(
+  word: T,
+  direction: StudyDirection,
+): { prompt: string; answer: string } {
+  return direction === "back-to-front"
+    ? { prompt: word.back, answer: word.front }
+    : { prompt: word.front, answer: word.back };
+}
+
+/** Locales matching `orientWord`, so audio speaks each side in its own voice. */
+export function orientLocales(
+  languages: DeckLanguages,
+  direction: StudyDirection,
+): { prompt: string; answer: string } {
+  return direction === "back-to-front"
+    ? { prompt: languages.back.locale, answer: languages.front.locale }
+    : { prompt: languages.front.locale, answer: languages.back.locale };
 }
