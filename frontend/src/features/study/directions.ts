@@ -12,6 +12,17 @@ export const STUDY_DIRECTIONS = [
 
 export const DEFAULT_STUDY_DIRECTION: StudyDirection = "front-to-back";
 
+/**
+ * The direction a URL means. `direction` is an optional search param, so an
+ * absent value is the default rather than an error — which keeps links that have
+ * no opinion about direction free of it.
+ */
+export function resolveDirection(
+  direction: StudyDirection | undefined,
+): StudyDirection {
+  return direction ?? DEFAULT_STUDY_DIRECTION;
+}
+
 /** The other direction. The switch is a toggle, so this is all it needs. */
 export function flipDirection(direction: StudyDirection): StudyDirection {
   return direction === "front-to-back" ? "back-to-front" : "front-to-back";

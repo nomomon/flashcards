@@ -1,10 +1,18 @@
 import type { Deck, LanguageInfo, Word } from "@/types/deck";
 import type { StudyDirection } from "@/types/session";
 
-/** One prompt/answer pairing. A word yields two of these in `both` mode. */
+import { directionEndpoints, orientLocales, orientWord } from "./directions";
+
+/**
+ * One word, oriented by the session's direction: what is asked, and what
+ * answers it.
+ *
+ * A word is exactly one card. There used to be a "both" direction that put the
+ * same word in the queue twice, which meant "cards left" and "words left" were
+ * different numbers; with a binary direction `wordId` identifies the card, and
+ * the two counts are the same count.
+ */
 export interface StudyCard {
-  /** Unique per card, so the two directions of one word stay distinguishable. */
-  key: string;
   wordId: string;
   prompt: string;
   answer: string;
@@ -23,44 +31,33 @@ export function selectWords(deck: Deck, tags: string[] | null): Word[] {
   );
 }
 
+/**
+ * The selection as cards. Which side is the prompt comes from `directions.ts`,
+ * so the session, the word list and the audio all agree about what is being
+ * asked - and the language pair is resolved once for the whole queue rather
+ * than per word.
+ */
 export function buildStudyCards(
   deck: Deck,
   tags: string[] | null,
   direction: StudyDirection,
 ): StudyCard[] {
-  const words = selectWords(deck, tags);
+  const labels = directionEndpoints(deck.languages, direction);
+  const locales = orientLocales(deck.languages, direction);
 
-  switch (direction) {
-    case "front-to-back":
-      return words.map((word) => toCard(deck, word, false));
-    case "back-to-front":
-      return words.map((word) => toCard(deck, word, true));
-    case "both":
-      return [
-        ...words.map((word) => toCard(deck, word, false)),
-        ...words.map((word) => toCard(deck, word, true)),
-      ];
-  }
-}
+  const promptLanguage: LanguageInfo = {
+    label: labels.from,
+    locale: locales.prompt,
+  };
+  const answerLanguage: LanguageInfo = {
+    label: labels.to,
+    locale: locales.answer,
+  };
 
-function toCard(deck: Deck, word: Word, reversed: boolean): StudyCard {
-  const { front, back } = deck.languages;
-
-  return reversed
-    ? {
-        key: `${word.id}:back`,
-        wordId: word.id,
-        prompt: word.back,
-        answer: word.front,
-        promptLanguage: back,
-        answerLanguage: front,
-      }
-    : {
-        key: `${word.id}:front`,
-        wordId: word.id,
-        prompt: word.front,
-        answer: word.back,
-        promptLanguage: front,
-        answerLanguage: back,
-      };
+  return selectWords(deck, tags).map((word) => ({
+    wordId: word.id,
+    ...orientWord(word, direction),
+    promptLanguage,
+    answerLanguage,
+  }));
 }
