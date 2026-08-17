@@ -1,0 +1,72 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a deploy in flight: a half-uploaded Pages artifact is worse than
+# a slightly stale site.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Bad data must never ship, even though CI already checked it: a manual
+      # dispatch can run on a ref CI never saw.
+      - name: Validate data
+        run: pnpm data:validate
+
+      # Produces frontend/dist, including a copy of data/, 404.html, .nojekyll
+      # (postbuild.mjs) and everything in frontend/public (Vite).
+      - name: Build
+        run: pnpm build
+
+      # The custom domain lives in frontend/public/CNAME and reaches dist via
+      # Vite's public dir. Losing it points flashcards.nomomon.xyz at nothing,
+      # so fail here rather than after the deploy.
+      - name: Check CNAME survived the build
+        run: |
+          if [ ! -f frontend/dist/CNAME ]; then
+            echo "::error::frontend/dist/CNAME is missing. It should come from frontend/public/CNAME and must contain flashcards.nomomon.xyz."
+            exit 1
+          fi
+          echo "CNAME: $(cat frontend/dist/CNAME)"
+
+      # Uploads the directory verbatim, so nothing here rewrites or drops CNAME.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

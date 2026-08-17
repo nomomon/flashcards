@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-08-17T00:00:00.000Z",
+  "decks": [
+    {
+      "id": "dutch-1",
+      "name": "Dutch",
+      "color": "#FF4F00",
+      "languages": {
+        "front": {
+          "label": "Dutch",
+          "locale": "nl-NL"
+        },
+        "back": {
+          "label": "English",
+          "locale": "en-US"
+        }
+      },
+      "wordCount": 127,
+      "tags": [
+        "conjunction",
+        "demonstrative",
+        "food",
+        "introduction",
+        "l1",
+        "lesson3",
+        "location",
+        "manner",
+        "nature",
+        "pronouns",
+        "question",
+        "reason",
+        "thank",
+        "time",
+        "transport"
+      ],
+      "revision": "2026-08-17T00:00:00.000Z",
+      "path": "decks/dutch-1.json"
+    }
+  ]
+}

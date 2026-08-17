@@ -1,0 +1,143 @@
+name: Audio
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Regenerate every clip, ignoring the index"
+        type: boolean
+        default: false
+      deck:
+        description: "Only this deck id (blank = all decks)"
+        type: string
+        default: ""
+      locales:
+        description: "Only these locales, comma separated, e.g. nl-NL (blank = all)"
+        type: string
+        default: ""
+      limit:
+        description: "Stop after generating this many clips (blank = no cap)"
+        type: string
+        default: ""
+      dry_run:
+        description: "Report the plan only: no API calls, no commit"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - "data/decks/**"
+      - "data/manifest.json"
+
+permissions:
+  contents: write
+
+# Two runs committing to data/audio/ at once would race on the push.
+concurrency:
+  group: audio
+  cancel-in-progress: false
+
+jobs:
+  # The secrets context is not available in a job-level `if`, so the check has
+  # to happen in a step and be handed on as an output.
+  preflight:
+    name: Check for API key
+    runs-on: ubuntu-latest
+    outputs:
+      has_key: ${{ steps.check.outputs.has_key }}
+    steps:
+      - id: check
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::GEMINI_API_KEY is not set, so audio generation is skipped. Add the secret under Settings -> Secrets and variables -> Actions."
+          fi
+
+  generate:
+    name: Generate audio
+    needs: preflight
+    # A dry run needs no key, so it stays useful on a fork or before the secret
+    # exists. Without a key and without --dry-run the job skips (grey, not red).
+    if: needs.preflight.outputs.has_key == 'true' || inputs.dry_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The generator encodes Opus-in-Ogg by piping through ffmpeg.
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      # Flags are composed and used in one step, with the inputs read from env
+      # vars into a bash array: nothing user-supplied is ever interpolated into
+      # a shell string. Called through node rather than `pnpm data:audio --`
+      # for the same reason: no extra layer to lose quoting in.
+      - name: Generate audio
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          INPUT_FORCE: ${{ inputs.force }}
+          INPUT_DECK: ${{ inputs.deck }}
+          INPUT_LOCALES: ${{ inputs.locales }}
+          INPUT_LIMIT: ${{ inputs.limit }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          if [ "$INPUT_FORCE" = "true" ]; then args+=(--force); fi
+          if [ "$INPUT_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          if [ -n "$INPUT_DECK" ]; then args+=(--deck "$INPUT_DECK"); fi
+          if [ -n "$INPUT_LOCALES" ]; then args+=(--locales "$INPUT_LOCALES"); fi
+          if [ -n "$INPUT_LIMIT" ]; then args+=(--limit "$INPUT_LIMIT"); fi
+          echo "flags: ${args[*]:-none}"
+          node tools/audio-gen/src/generate.mjs "${args[@]}"
+
+      # A deck change may have moved wordCount/tags/revision, and the validator
+      # checks those against the manifest. Refreshed here so validation reflects
+      # the decks as committed; deliberately NOT committed, see the commit step.
+      - name: Refresh manifest
+        run: |
+          pnpm data:manifest
+          if ! git diff --quiet -- data/manifest.json; then
+            echo "::warning::data/manifest.json on main is stale; regenerate it (pnpm data:manifest) and commit it with the deck change."
+          fi
+
+      - name: Validate data
+        run: pnpm data:validate
+
+      # Only data/audio/ is committed. That path is NOT in this workflow's
+      # trigger paths (data/decks/**, data/manifest.json), so the bot's own
+      # commit cannot retrigger this workflow: no loop. Committing the refreshed
+      # manifest here would break exactly that guarantee, which is why the step
+      # above only warns.
+      #
+      # No [skip ci] marker: the new audio is part of the published site, so CI
+      # and Deploy should see it. Note that a push made with GITHUB_TOKEN does
+      # not start other workflow runs, so this commit ships with the next push
+      # to main or a manual run of Deploy.
+      - name: Commit generated audio
+        if: ${{ !inputs.dry_run }}
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ -z "$(git status --porcelain -- data/audio)" ]; then
+            echo "No audio changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- data/audio
+          git commit -m "chore(audio): regenerate deck audio"
+          git push origin "HEAD:$BRANCH"

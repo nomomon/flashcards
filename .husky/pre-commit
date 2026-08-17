@@ -1,1 +1,2 @@
-npm test
+pnpm biome check --write --no-errors-on-unmatched --staged
+git update-index --again

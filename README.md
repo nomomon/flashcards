@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# flashcards
 
-## Getting Started
+Flashcards for language learning, living at
+**[flashcards.nomomon.xyz](https://flashcards.nomomon.xyz)**.
 
-First, run the development server:
+There is no backend. The app is a static React SPA on GitHub Pages, and the decks
+are plain JSON files in this repo. Pronunciation audio is generated once by a
+GitHub Actions workflow and committed next to the decks, so the running app never
+calls an API and never needs a key.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Layout
+
+```
+.
+├── frontend/        Vite + React + TypeScript SPA (the whole app)
+├── data/            decks, and generated audio — the "database"
+│   ├── manifest.json
+│   ├── decks/*.json
+│   └── audio/
+├── tools/
+│   ├── data-tools/  validate decks, rebuild the manifest
+│   └── audio-gen/   generate missing pronunciation audio via Gemini TTS
+└── docs/
+    ├── ARCHITECTURE.md   how the frontend is layered, and why
+    └── DATA_CONTRACT.md  the exact shape of everything in data/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`data/` is copied into the build output, so the deployed site serves its own data
+same-origin at `/data/...`. Editing a deck and pushing is the entire publishing
+workflow.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Getting started
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Requires Node 20+ and [pnpm](https://pnpm.io) (the repo pins a version via
+`packageManager`, so `corepack enable` is enough).
 
-## Learn More
+```bash
+pnpm install
+pnpm dev          # http://localhost:5173
+```
 
-To learn more about Next.js, take a look at the following resources:
+The dev server serves the repo's real `data/` folder at `/data`, so development
+and production read data through identical URLs.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command              | What it does                                            |
+| -------------------- | ------------------------------------------------------- |
+| `pnpm dev`           | Frontend dev server                                     |
+| `pnpm build`         | Type-check, build to `frontend/dist`, copy `data/` in    |
+| `pnpm preview`       | Serve the production build locally                      |
+| `pnpm check`         | Biome — format, lint and organize imports, with fixes    |
+| `pnpm ci:check`      | Biome in CI mode (no writes)                             |
+| `pnpm typecheck`     | `tsc --noEmit`                                           |
+| `pnpm data:validate` | Check `data/` against the contract                       |
+| `pnpm data:manifest` | Rebuild `data/manifest.json` from the deck files         |
+| `pnpm data:audio`    | Generate missing pronunciation audio (needs a Gemini key)|
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Biome replaces both Prettier and ESLint here; a Husky pre-commit hook runs it on
+staged files.
 
-## Deploy on Vercel
+## Adding or editing a deck
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Edit or add a file under `data/decks/`, following
+   [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). Every word needs a stable
+   `id` — **never** change or renumber an existing one, because that is the key a
+   learner's saved progress is stored under.
+2. Bump the deck's `revision` to the current UTC timestamp. That is what tells a
+   browser its cached copy is stale.
+3. `pnpm data:manifest && pnpm data:validate`.
+4. Commit and push to `main`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Pushing then does two things on its own: the site redeploys, and the audio
+workflow generates clips for any words that do not have one yet and commits them
+back. Deleting `data/audio/` and re-running the workflow repopulates it from
+scratch.
+
+## How progress is stored
+
+Per-device, in `localStorage`, under `flashcards:progress:v1:<deckId>` — one
+`known` flag and a seen-count per word. Nothing is uploaded and there are no
+accounts, so progress does not follow you between devices. That is a deliberate
+trade for having no backend to run.
+
+Deck data fetched from the network is cached through TanStack Query and persisted
+to `localStorage`, which is what lets the app open and work offline once a deck
+has been visited.
+
+## Deployment
+
+`main` → GitHub Actions → GitHub Pages, on the custom domain
+`flashcards.nomomon.xyz`. `frontend/public/CNAME` and the repo's Pages setting
+both record that domain. The SPA is served with a `404.html` copy of
+`index.html`, which is how client-side routes survive a hard refresh.
+
+## Audio generation
+
+`tools/audio-gen` asks Gemini TTS for each word it has not voiced yet, encodes
+the result to Opus in Ogg (mono, ~16 kbps — a few KB per word) and records it in
+`data/audio/index.json`. It is incremental and idempotent: existing clips are
+skipped, missing files are regenerated, and clips whose text no longer appears in
+any deck are pruned. Running it needs a `GEMINI_API_KEY`; the deployed app does
+not. See [`tools/audio-gen/README.md`](tools/audio-gen/README.md).
+
+## License
+
+MIT
