@@ -41,6 +41,13 @@ const MIN_COMMIT_DISTANCE = 24;
 /** Below this, a release is a tap on the card rather than the end of a swipe. */
 const TAP_SLOP = 4;
 
+/**
+ * How strongly the card takes on the verdict colour at full commit distance.
+ * Enough to be unmistakable, low enough that the word underneath stays readable
+ * - the tint is feedback, not a curtain.
+ */
+const TINT_OPACITY = 0.28;
+
 /** How far the card is thrown when it leaves. Comfortably off any viewport. */
 const FLY_OUT_DISTANCE = 640;
 
@@ -162,6 +169,16 @@ function StackCard({
     [-SWIPE_DISTANCE, -MIN_COMMIT_DISTANCE],
     [1, 0],
   );
+  // The wash of colour starts from the very first pixel, unlike the stamps.
+  // Together they read as one gesture with two stages: the card takes on the
+  // verdict's colour immediately, then the word appears once the throw is far
+  // enough to actually commit.
+  const correctTint = useTransform(x, [0, SWIPE_DISTANCE], [0, TINT_OPACITY]);
+  const incorrectTint = useTransform(
+    x,
+    [0, -SWIPE_DISTANCE],
+    [0, TINT_OPACITY],
+  );
 
   const handleRelease = (offset: number, velocity: number) => {
     const wentFar = Math.abs(offset) > SWIPE_DISTANCE;
@@ -231,9 +248,41 @@ function StackCard({
       />
       {/* Outside the flipping element on purpose: these must not turn with the
           card, and they must paint over both faces. */}
+      <SwipeTint color="incorrect" opacity={incorrectTint} />
+      <SwipeTint color="correct" opacity={correctTint} />
       <SwipeVerdict label="Incorrect" side="left" opacity={incorrectOpacity} />
       <SwipeVerdict label="Correct" side="right" opacity={correctOpacity} />
     </motion.div>
+  );
+}
+
+interface SwipeTintProps {
+  color: "correct" | "incorrect";
+  opacity: MotionValue<number>;
+}
+
+/**
+ * The verdict colour washing over the card as it is dragged.
+ *
+ * Two independently faded layers rather than one layer whose colour is
+ * interpolated: the tokens are `oklch`, and asking an animation library to
+ * interpolate between two colour *strings* invites it to fall back to something
+ * that does not resolve a CSS variable at all. Opacity always interpolates.
+ *
+ * `rounded-xl` matches the card face it covers, so the wash stops at the same
+ * corners rather than squaring them off.
+ */
+function SwipeTint({ color, opacity }: SwipeTintProps) {
+  return (
+    <motion.div
+      aria-hidden="true"
+      style={{ opacity }}
+      className={
+        color === "correct"
+          ? "pointer-events-none absolute inset-0 rounded-xl bg-correct"
+          : "pointer-events-none absolute inset-0 rounded-xl bg-incorrect"
+      }
+    />
   );
 }
 
@@ -256,8 +305,8 @@ function SwipeVerdict({ label, side, opacity }: SwipeVerdictProps) {
       style={{ opacity }}
       className={
         isCorrect
-          ? "pointer-events-none absolute top-5 right-5 rotate-6 rounded-lg border-2 border-primary/60 px-3 py-1 text-sm font-semibold tracking-wide text-primary uppercase"
-          : "pointer-events-none absolute top-5 left-5 -rotate-6 rounded-lg border-2 border-destructive/60 px-3 py-1 text-sm font-semibold tracking-wide text-destructive uppercase"
+          ? "pointer-events-none absolute top-5 right-5 rotate-6 rounded-lg border-2 border-correct px-3 py-1 text-sm font-semibold tracking-wide text-correct uppercase"
+          : "pointer-events-none absolute top-5 left-5 -rotate-6 rounded-lg border-2 border-incorrect px-3 py-1 text-sm font-semibold tracking-wide text-incorrect uppercase"
       }
     >
       {label}

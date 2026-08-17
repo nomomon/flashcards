@@ -25,6 +25,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-correct: var(--correct);
+  --color-correct-foreground: var(--correct-foreground);
+  --color-incorrect: var(--incorrect);
+  --color-incorrect-foreground: var(--incorrect-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -64,6 +68,14 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  /* Verdict colours. Deliberately separate from --destructive even though
+     "incorrect" is also red: destructive marks an action that loses data (reset
+     progress), while incorrect marks an answer. Sharing one token would mean a
+     palette change to either silently restyling the other. */
+  --correct: oklch(0.596 0.145 152);
+  --correct-foreground: oklch(0.985 0 0);
+  --incorrect: oklch(0.592 0.212 24);
+  --incorrect-foreground: oklch(0.985 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -99,6 +111,12 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  /* Lifted and de-saturated for a dark ground, where the light values read
+     muddy rather than green and red. */
+  --correct: oklch(0.706 0.153 155);
+  --correct-foreground: oklch(0.208 0 0);
+  --incorrect: oklch(0.704 0.191 22.216);
+  --incorrect-foreground: oklch(0.208 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
