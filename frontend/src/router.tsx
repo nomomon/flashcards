@@ -5,10 +5,7 @@ import {
 } from "@tanstack/react-router";
 import { z } from "zod";
 
-import {
-  DEFAULT_STUDY_DIRECTION,
-  STUDY_DIRECTIONS,
-} from "@/features/study/directions";
+import { STUDY_DIRECTIONS } from "@/features/study/directions";
 import { DeckPage } from "@/routes/deck-route";
 import { OverviewPage } from "@/routes/index-route";
 import { NotFoundPage, RootLayout, RouteErrorPage } from "@/routes/root-layout";
@@ -49,7 +46,12 @@ const tagsSchema = z
  */
 const deckSearchSchema = z.object({
   tags: tagsSchema,
-  direction: z.enum(STUDY_DIRECTIONS).catch(DEFAULT_STUDY_DIRECTION),
+  /**
+   * Optional, like `tags`: absent means the default direction, so a link that
+   * has no opinion can omit it and the URL stays clean until the learner
+   * actually flips the switch. Resolve it with `resolveDirection`.
+   */
+  direction: z.enum(STUDY_DIRECTIONS).optional().catch(undefined),
 });
 
 export type DeckSearch = z.output<typeof deckSearchSchema>;

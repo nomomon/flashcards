@@ -2,8 +2,7 @@ import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { DeckBrowser } from "@/features/decks/deck-browser";
-import { DeckGridSkeleton } from "@/features/decks/deck-grid";
+import { DeckGrid, DeckGridSkeleton } from "@/features/decks/deck-grid";
 import { useManifest, useSyncData } from "@/lib/data/queries";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +42,7 @@ export function OverviewPage() {
 
       {decks ? (
         decks.length > 0 ? (
-          <DeckBrowser decks={decks} />
+          <DeckGrid decks={decks} />
         ) : (
           <p className="py-12 text-center text-sm text-muted-foreground">
             No decks published yet.

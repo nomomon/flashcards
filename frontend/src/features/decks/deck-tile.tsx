@@ -1,31 +1,30 @@
+import { Link } from "@tanstack/react-router";
 import { AlignLeftIcon } from "lucide-react";
 
 import { Progress } from "@/components/ui/progress";
 import { useDeckProgress } from "@/lib/progress/queries";
 import type { DeckSummary } from "@/types/deck";
-import type { DeckProgress } from "@/types/progress";
-import { DeckIcon } from "./deck-icon";
 
-interface DeckTileProps {
-  deck: DeckSummary;
-  onSelect: (deck: DeckSummary) => void;
-}
+import { DeckIcon } from "./deck-icon";
+import { countKnownEntries } from "./known-count";
 
 /**
- * A square, deck-coloured tile. Everything shown comes from the manifest plus
- * local progress, so the overview never has to fetch a deck file.
+ * A square, deck-coloured tile linking to the deck's page. Everything shown
+ * comes from the manifest plus local progress, so the overview never has to
+ * fetch a deck file - which is the whole reason the manifest carries
+ * `wordCount`.
  */
-export function DeckTile({ deck, onSelect }: DeckTileProps) {
+export function DeckTile({ deck }: { deck: DeckSummary }) {
   const progress = useDeckProgress(deck.id);
-  const known = Math.min(countKnown(progress.data), deck.wordCount);
+  const known = Math.min(countKnownEntries(progress.data), deck.wordCount);
   const percent =
     deck.wordCount > 0 ? Math.round((known / deck.wordCount) * 100) : 0;
 
   return (
-    // The button is an overlay rather than a wrapper so that the tile can
-    // contain block content (the progress bar) and still be one real button.
+    // The link is an overlay rather than a wrapper so that the tile can contain
+    // block content (the progress bar) and still be one real anchor.
     <div
-      className="relative aspect-square overflow-hidden rounded-xl text-white shadow-sm transition-transform has-[button:active]:scale-[0.99] has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-ring/50"
+      className="relative aspect-square overflow-hidden rounded-xl text-white shadow-sm transition-transform has-[a:active]:scale-[0.99] has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50"
       style={{ backgroundColor: deck.color }}
     >
       <div className="pointer-events-none flex h-full flex-col justify-between gap-2 p-4">
@@ -50,26 +49,12 @@ export function DeckTile({ deck, onSelect }: DeckTileProps) {
           />
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => onSelect(deck)}
+      <Link
+        to="/deck/$deckId"
+        params={{ deckId: deck.id }}
         aria-label={`Open ${deck.name}: ${known} of ${deck.wordCount} words known`}
-        className="absolute inset-0 cursor-pointer outline-none active:bg-black/5"
+        className="absolute inset-0 outline-none active:bg-black/5"
       />
     </div>
   );
-}
-
-/**
- * Counts known entries straight off stored progress. Ids for words that have
- * since been removed from the deck can linger, hence the caller's clamp.
- */
-function countKnown(progress: DeckProgress | undefined): number {
-  if (!progress) return 0;
-
-  let known = 0;
-  for (const word of Object.values(progress.words)) {
-    if (word.known) known += 1;
-  }
-  return known;
 }

@@ -5,16 +5,11 @@ import { DeckTile } from "./deck-tile";
 
 const GRID_CLASS = "grid grid-cols-2 gap-4 sm:grid-cols-3";
 
-interface DeckGridProps {
-  decks: DeckSummary[];
-  onSelect: (deck: DeckSummary) => void;
-}
-
-export function DeckGrid({ decks, onSelect }: DeckGridProps) {
+export function DeckGrid({ decks }: { decks: DeckSummary[] }) {
   return (
     <div className={GRID_CLASS}>
       {decks.map((deck) => (
-        <DeckTile key={deck.id} deck={deck} onSelect={onSelect} />
+        <DeckTile key={deck.id} deck={deck} />
       ))}
     </div>
   );
