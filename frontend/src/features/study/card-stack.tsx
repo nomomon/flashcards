@@ -10,6 +10,7 @@ import {
   useTransform,
   type Variants,
 } from "motion/react";
+import { useMemo } from "react";
 
 import type { StudyCard } from "./session-queue";
 import { StudyCardView } from "./study-card";
@@ -49,41 +50,63 @@ const TAP_SLOP = 4;
 const TINT_OPACITY = 0.28;
 
 /**
- * How far a leaving card is thrown.
+ * How far a leaving card has to travel to be gone.
  *
- * One viewport width, which is always enough: the card starts centred, so its
- * trailing edge is less than half a viewport from the middle, and travelling a
- * full width clears the screen on any size. A fixed pixel distance cannot do
- * this - 640px leaves the screen on a phone but stalls in plain sight on a
- * desktop.
+ * Derived rather than picked: the card is centred, so its trailing edge clears
+ * the viewport edge after `viewport/2 + card/2`, plus a little slack for the
+ * tilt. The card is `w-full max-w-sm` inside a 16px gutter, so its width is
+ * `min(384, viewport - 32)` and needs no measuring.
  *
- * Read when the throw begins rather than on mount, so a resize or a rotation
- * between one card and the next needs no listener to stay correct.
+ * This used to be one whole viewport width, which happened to be enough - but
+ * only just. On a 390px screen it needed 374px and travelled 390px, a 16px
+ * margin that any layout change could have eaten, ending the animation with the
+ * card still faintly on screen.
+ *
+ * Read when the throw begins rather than on mount, so a resize or rotation
+ * between one card and the next stays correct without a listener.
  */
-const flyOutDistance = () =>
-  typeof window === "undefined" ? 900 : window.innerWidth;
+const exitDistance = () => {
+  if (typeof window === "undefined") return 900;
+  const viewport = window.innerWidth;
+  const card = Math.min(384, viewport - 32);
+  return viewport / 2 + card / 2 + 32;
+};
+
+/**
+ * How long a full-width throw takes. A card released mid-swipe covers only what
+ * is left, in proportion - see `exitTransition`.
+ *
+ * 0.42s puts a phone-sized throw at roughly 950-1050px/s, which is within the
+ * range of a real flick (500-1500px/s). The previous 0.32s worked out at about
+ * 1250px/s average and considerably more at its peak, and that is why a button
+ * press felt snapped: a swipe hands the card over already 100-150px out and
+ * moving, so it only ever animated the remainder, while a button started it dead
+ * centre and sent it the whole way in the same time.
+ */
+const FULL_EXIT_DURATION = 0.42;
+/** Floor, so a card released almost gone does not vanish in a single frame. */
+const MIN_EXIT_DURATION = 0.2;
+
+/**
+ * Time the throw by how far is actually left to go, so the two ways of rating a
+ * card move at the same speed instead of taking the same time.
+ *
+ * The curve accelerates: something leaving should pick up speed, and an exit
+ * that decelerates reads as arriving somewhere.
+ */
+function exitTransition(fromX: number, toX: number): Transition {
+  const total = Math.abs(toX) || 1;
+  const remaining = Math.abs(toX - fromX);
+  const duration = Math.max(
+    MIN_EXIT_DURATION,
+    FULL_EXIT_DURATION * (remaining / total),
+  );
+  return { duration, ease: [0.32, 0, 0.67, 0] };
+}
 
 const SPRING: Transition = { type: "spring", stiffness: 320, damping: 32 };
 const SPRING_BACK: Transition = { type: "spring", stiffness: 500, damping: 38 };
 const INSTANT: Transition = { duration: 0 };
-
-/**
- * The exit, as a dynamic variant. `AnimatePresence` hands its `custom` prop to
- * children that are leaving, which is how the card learns which way to fly:
- * the verdict is known one render before the card is gone.
- *
- * Only `x` is animated. The tilt is derived from `x` further down, so animating
- * it here would give one value two writers - and the derived one would win on
- * every frame it was recalculated.
- */
-const FLY_OUT: Variants = {
-  out: (direction: number) => ({
-    x: direction * flyOutDistance(),
-    // No fade: the card should look like it left, not like it dissolved on the
-    // way. Clipping at the viewport is what removes it from sight.
-    transition: { duration: 0.32, ease: [0.32, 0, 0.67, 0] },
-  }),
-};
 
 /** Reduced motion: no throw, no fade out over time, just gone. */
 const VANISH: Variants = {
@@ -215,6 +238,30 @@ function StackCard({
     [0, TINT_OPACITY],
   );
 
+  /**
+   * The exit, as a dynamic variant closing over this card's `x`.
+   *
+   * `AnimatePresence` hands its `custom` prop to children that are leaving,
+   * which is how the card learns which way to fly - the verdict is known one
+   * render before the card is gone. The variant is a function, so it runs at
+   * that moment and can read where the card actually was when released, which is
+   * what lets the throw be timed by distance rather than by a fixed duration.
+   *
+   * Only `x` is animated, and there is no fade. The tilt is derived from `x`, so
+   * animating it here would give one value two writers; and clipping at the
+   * viewport is what removes the card from sight, so fading it as well would make
+   * it dissolve on the way out instead of leave.
+   */
+  const flyOut = useMemo<Variants>(
+    () => ({
+      out: (direction: number) => {
+        const target = direction * exitDistance();
+        return { x: target, transition: exitTransition(x.get(), target) };
+      },
+    }),
+    [x],
+  );
+
   const handleRelease = (offset: number, velocity: number) => {
     const wentFar = Math.abs(offset) > SWIPE_DISTANCE;
     const wentFast =
@@ -268,7 +315,7 @@ function StackCard({
         filter: depthBlur(depth),
       }}
       transition={reduceMotion ? INSTANT : SPRING}
-      variants={reduceMotion ? VANISH : FLY_OUT}
+      variants={reduceMotion ? VANISH : flyOut}
       exit="out"
       drag={isFront ? "x" : false}
       // No inertia after release: either this card is leaving, or it is coming
