@@ -25,7 +25,7 @@ stale. Everything derived is a pure function of those files.
 | ------------------ | ------------------------------------------------------------------------------------- |
 | `npm run manifest` | Regenerates `data/manifest.json` from `library.json` + `banks/*.tsv`. Byte-idempotent. |
 | `npm run validate` | Checks `data/` against all seven contract invariants. Exits 1 on any error.            |
-| `npm run migrate`  | One-shot schema 1 -> 2 migration. No-ops once `data/decks/` is gone.                   |
+| `npm run migrate`  | One-shot schema 1 -> 2 migration. One-shot schema 1 -> 2 migration; no-ops now that schema 1 is gone.                   |
 
 From the repo root: `pnpm data:manifest`, `pnpm data:validate`. Or directly, from
 anywhere:

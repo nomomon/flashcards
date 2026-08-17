@@ -26,7 +26,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "data/decks/**"
+      # The authored files, plus the manifest they generate. Listing the banks
+      # explicitly rather than relying on the manifest alone: a bank edit always
+      # bumps the manifest today, but a trigger that only works via a side effect
+      # is one refactor away from silently never firing.
+      - "data/banks/**"
+      - "data/library.json"
       - "data/manifest.json"
 
 permissions:
@@ -118,10 +123,10 @@ jobs:
         run: pnpm data:validate
 
       # Only data/audio/ is committed. That path is NOT in this workflow's
-      # trigger paths (data/decks/**, data/manifest.json), so the bot's own
-      # commit cannot retrigger this workflow: no loop. Committing the refreshed
-      # manifest here would break exactly that guarantee, which is why the step
-      # above only warns.
+      # trigger paths (data/banks/**, data/library.json, data/manifest.json), so
+      # the bot's own commit cannot retrigger this workflow: no loop. Committing
+      # the refreshed manifest here would break exactly that guarantee, which is
+      # why the step above only warns.
       #
       # No [skip ci] marker: the new audio is part of the published site, so CI
       # and Deploy should see it. Note that a push made with GITHUB_TOKEN does
