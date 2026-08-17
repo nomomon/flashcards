@@ -2,7 +2,11 @@ import { ArrowRightIcon } from "lucide-react";
 import { useId } from "react";
 
 import { Switch } from "@/components/ui/switch";
-import { directionEndpoints, flipDirection } from "@/features/study/directions";
+import {
+  DEFAULT_STUDY_DIRECTION,
+  directionEndpoints,
+  flipDirection,
+} from "@/features/study/directions";
 import type { DeckLanguages } from "@/types/deck";
 import type { StudyDirection } from "@/types/session";
 
@@ -47,7 +51,10 @@ export function DirectionSwitch({
       </label>
       <Switch
         id={id}
-        checked={direction === "back-to-front"}
+        // Off means "however this deck starts", on means "flipped". Written
+        // against the default rather than a hardcoded value, so changing the
+        // default cannot leave the switch showing as on before anyone touches it.
+        checked={direction !== DEFAULT_STUDY_DIRECTION}
         onCheckedChange={() => onChange(flipDirection(direction))}
         aria-label={`Study direction: ${from} to ${to}. Switch to swap.`}
       />

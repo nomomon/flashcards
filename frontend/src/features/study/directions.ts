@@ -10,7 +10,21 @@ export const STUDY_DIRECTIONS = [
   "back-to-front",
 ] as const satisfies readonly StudyDirection[];
 
-export const DEFAULT_STUDY_DIRECTION: StudyDirection = "front-to-back";
+/**
+ * Which way round a deck starts.
+ *
+ * `back-to-front`, i.e. the deck's *back* language is the prompt. The decks here
+ * are authored Dutch-first because that is how the source material is laid out,
+ * but the useful drill is being shown the English and having to produce the
+ * Dutch, so the default asks for the language being learned.
+ *
+ * This is a presentation default, not a property of the data. Swapping the
+ * columns in the banks instead would have been destructive: word ids are slugs of
+ * the `front` text and they are the keys progress is stored under, so making
+ * English the front would either reset every learner's progress or leave every id
+ * failing the slug invariant.
+ */
+export const DEFAULT_STUDY_DIRECTION: StudyDirection = "back-to-front";
 
 /**
  * The direction a URL means. `direction` is an optional search param, so an
