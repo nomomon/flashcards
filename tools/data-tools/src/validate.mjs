@@ -1,42 +1,64 @@
 #!/usr/bin/env node
+
 // Validates everything under data/ against docs/DATA_CONTRACT.md.
 //
-//   node src/validate.mjs
+//   node src/validate.mjs        (or: pnpm data:validate)
 //
-// Exits 0 with a one-screen summary, or 1 after printing every problem found
-// (it never stops at the first). Runs in CI, so output is plain text lines.
+// Never stops at the first problem: it collects every one, groups them by the
+// invariant they violate and prints them as plain lines, because this runs in CI
+// and a log the author has to re-run to see the next error is a waste of a run.
+//
+// Exit 0 = valid (warnings may still be printed). Exit 1 = at least one error.
+// Unbalanced inline markup is a WARNING by contract — it renders as literal
+// text, so it is a typo, not corruption.
 
 import fs from "node:fs";
 import path from "node:path";
-import { collectTags, listDeckFiles } from "./decks.mjs";
+import { buildManifest, serializeManifest } from "./build-manifest.mjs";
 import { readJson } from "./json.mjs";
-import { AUDIO_INDEX_PATH, DATA_DIR, MANIFEST_PATH, rel } from "./paths.mjs";
+import {
+  collectTags,
+  expectedBank,
+  isSafeRelativePath,
+  listBankFiles,
+  loadBank,
+  loadLibrary,
+  REQUIRED_COLUMNS,
+  SCHEMA_VERSION,
+} from "./library.mjs";
+import { hasFormatting, stripFormatting, validateInline } from "./markup.mjs";
+import {
+  AUDIO_INDEX_PATH,
+  BANKS_DIR,
+  DATA_DIR,
+  LIBRARY_PATH,
+  MANIFEST_PATH,
+  rel,
+} from "./paths.mjs";
 import { isValidWordId } from "./slug.mjs";
 
-const SCHEMA_VERSION = 1;
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 const BCP47 = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
-const ISO_8601_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
+/** @type {Array<{invariant: number, message: string}>} */
 const problems = [];
-/** @param {number} invariant 1-6, or 0 for structural problems */
+/** @type {string[]} */
+const warnings = [];
+
+/** @param {number} invariant 1-7, or 0 for structural / field-type problems */
 function fail(invariant, message) {
   problems.push({ invariant, message });
 }
-
-function isIso8601(value) {
-  return (
-    typeof value === "string" &&
-    ISO_8601_UTC.test(value) &&
-    !Number.isNaN(Date.parse(value))
-  );
+function warn(message) {
+  warnings.push(message);
 }
 
 function checkLanguages(where, languages) {
-  if (!languages || typeof languages !== "object") {
-    fail(0, `${where}: languages missing`);
-    return;
+  if (!languages || typeof languages !== "object" || Array.isArray(languages)) {
+    fail(0, `${where}: languages must be { front, back }`);
+    return [];
   }
+  const locales = [];
   for (const side of ["front", "back"]) {
     const lang = languages[side];
     if (!lang || typeof lang !== "object") {
@@ -45,278 +67,362 @@ function checkLanguages(where, languages) {
     }
     if (typeof lang.label !== "string" || lang.label === "") {
       fail(0, `${where}: languages.${side}.label must be a non-empty string`);
+    } else if (hasFormatting(lang.label)) {
+      fail(
+        0,
+        `${where}: languages.${side}.label must be plain text (no inline markup)`,
+      );
     }
     if (typeof lang.locale !== "string" || !BCP47.test(lang.locale)) {
       fail(
         0,
         `${where}: languages.${side}.locale ${JSON.stringify(lang.locale)} is not a BCP-47 tag`,
       );
+    } else {
+      locales.push(lang.locale);
     }
   }
+  return locales;
 }
 
-// --- load ------------------------------------------------------------------
+// --- library.json ----------------------------------------------------------
 
-let manifest = null;
+const libraryWhere = rel(LIBRARY_PATH);
+let library = null;
 try {
-  manifest = readJson(MANIFEST_PATH);
+  library = loadLibrary();
 } catch (error) {
   fail(0, error.message);
 }
 
-/** @type {Array<{file: string, stem: string, deck: any}>} */
-const decks = [];
-for (const file of listDeckFiles()) {
-  try {
-    decks.push({
-      file,
-      stem: path.basename(file, ".json"),
-      deck: readJson(file),
+/** @type {Array<{id: string, bank: string, entry: object}>} */
+const entries = [];
+/** Banks a deck meant to reference but named wrongly; already reported. */
+const misreferenced = new Set();
+/** Locales any deck actually uses, for invariant 7. */
+const usedLocales = new Set();
+
+if (library) {
+  if (library.schemaVersion !== SCHEMA_VERSION) {
+    fail(
+      0,
+      `${libraryWhere}: schemaVersion is ${JSON.stringify(library.schemaVersion)}, expected ${SCHEMA_VERSION}`,
+    );
+  }
+  for (const key of ["revision", "wordCount", "tags"]) {
+    if (key in library) {
+      fail(
+        0,
+        `${libraryWhere}: "${key}" is derived and must not appear in the authored library`,
+      );
+    }
+  }
+  if (!Array.isArray(library.decks)) {
+    fail(0, `${libraryWhere}: decks must be an array`);
+  } else {
+    const seenIds = new Map();
+    library.decks.forEach((entry, index) => {
+      const at = `${libraryWhere}: decks[${index}]${entry?.id ? ` (${entry.id})` : ""}`;
+
+      if (typeof entry?.id !== "string" || entry.id === "") {
+        fail(0, `${at}: id must be a non-empty string`);
+      } else if (seenIds.has(entry.id)) {
+        fail(
+          0,
+          `${libraryWhere}: duplicate deck id "${entry.id}" at decks[${seenIds.get(entry.id)}] and decks[${index}]`,
+        );
+      } else {
+        seenIds.set(entry.id, index);
+      }
+
+      if (typeof entry?.name !== "string" || entry.name === "") {
+        fail(0, `${at}: name must be a non-empty string`);
+      }
+      if (typeof entry?.color !== "string" || !HEX_COLOR.test(entry.color)) {
+        fail(0, `${at}: color ${JSON.stringify(entry?.color)} must be #RRGGBB`);
+      }
+      for (const locale of checkLanguages(at, entry?.languages)) {
+        usedLocales.add(locale);
+      }
+      // `icon` is optional, and its VALUE is deliberately not checked here: the
+      // curated set of names lives in the frontend, and duplicating that list is
+      // exactly the cross-tool duplication schema 2 exists to remove. An
+      // unrecognized name renders the fallback icon, so a typo costs a deck its
+      // icon instead of failing CI. Only the type is our business.
+      if (entry && "icon" in entry) {
+        if (typeof entry.icon !== "string" || entry.icon === "") {
+          fail(
+            0,
+            `${at}: icon ${JSON.stringify(entry.icon)} must be a non-empty string (omit the key for the default icon)`,
+          );
+        }
+      }
+      for (const key of ["revision", "wordCount", "tags"]) {
+        if (entry && key in entry) {
+          fail(0, `${at}: "${key}" is derived and must not be authored here`);
+        }
+      }
+
+      if (!isSafeRelativePath(entry?.bank)) {
+        fail(
+          1,
+          `${at}: bank ${JSON.stringify(entry?.bank)} must be a path relative to data/, never absolute and never containing ".."`,
+        );
+        return;
+      }
+      // Invariant 1/2: the bank path is pinned to exactly `banks/<id>.tsv`, so
+      // a deck can never point outside the directory the orphan sweep below
+      // walks. This subsumes the old "id equals filename stem" comparison.
+      if (
+        typeof entry.id === "string" &&
+        entry.bank !== expectedBank(entry.id)
+      ) {
+        fail(
+          2,
+          `${at}: bank ${JSON.stringify(entry.bank)} must be exactly "${expectedBank(entry.id)}"`,
+        );
+        // Count the bank this deck *should* point at as referenced, so the
+        // orphan sweep does not report it as a second symptom. One
+        // misconfiguration should produce one message, naming the fix.
+        misreferenced.add(expectedBank(entry.id));
+        return;
+      }
+      if (typeof entry.id === "string") {
+        entries.push({ id: entry.id, bank: entry.bank, entry });
+      }
     });
-  } catch (error) {
-    fail(0, error.message);
   }
 }
 
-// --- deck files ------------------------------------------------------------
+// --- banks -----------------------------------------------------------------
 
-const deckRevisions = [];
+/** @type {Map<string, ReturnType<typeof loadBank>>} */
+const loadedBanks = new Map();
+/** bank path (relative to data/) -> deck ids referencing it */
+const referencedBanks = new Map();
 
-for (const { file, stem, deck } of decks) {
-  const where = rel(file);
+for (const { id, bank } of entries) {
+  referencedBanks.set(bank, [...(referencedBanks.get(bank) ?? []), id]);
 
-  if (deck.schemaVersion !== SCHEMA_VERSION) {
+  const absolute = path.join(DATA_DIR, bank);
+  // Invariant 1: the referenced bank exists.
+  if (!fs.existsSync(absolute)) {
     fail(
-      0,
-      `${where}: schemaVersion is ${JSON.stringify(deck.schemaVersion)}, expected ${SCHEMA_VERSION}`,
+      1,
+      `${libraryWhere}: deck "${id}" points at data/${bank}, which does not exist`,
     );
-  }
-  if (typeof deck.name !== "string" || deck.name === "") {
-    fail(0, `${where}: name must be a non-empty string`);
-  }
-  if (typeof deck.color !== "string" || !HEX_COLOR.test(deck.color)) {
-    fail(0, `${where}: color ${JSON.stringify(deck.color)} must be #RRGGBB`);
-  }
-  checkLanguages(where, deck.languages);
-
-  // Invariant 2 (first half): deck id equals filename stem.
-  if (deck.id !== stem) {
-    fail(
-      2,
-      `${where}: deck id ${JSON.stringify(deck.id)} !== filename stem "${stem}"`,
-    );
-  }
-
-  // Invariant 6: revision parses as ISO-8601.
-  if (!isIso8601(deck.revision)) {
-    fail(
-      6,
-      `${where}: revision ${JSON.stringify(deck.revision)} is not an ISO-8601 UTC timestamp`,
-    );
-  } else {
-    deckRevisions.push(deck.revision);
-  }
-
-  if (!Array.isArray(deck.words)) {
-    fail(0, `${where}: words must be an array`);
     continue;
   }
 
-  // Invariant 4: word ids unique within the deck and matching the slug rules.
-  const seenIds = new Map();
-  deck.words.forEach((word, index) => {
-    const at = `${where}: words[${index}]`;
-    if (typeof word.front !== "string" || word.front === "") {
-      fail(0, `${at}: front must be a non-empty string`);
+  // Invariant 2 needs no separate stem comparison: `bank` was already pinned to
+  // `banks/${id}.tsv` above, which makes id == filename stem by construction.
+
+  let loaded;
+  try {
+    loaded = loadBank(bank);
+  } catch (error) {
+    fail(0, `data/${bank}: ${error.message}`);
+    continue;
+  }
+  loadedBanks.set(id, loaded);
+  const where = `data/${bank}`;
+
+  // Invariant 3: parse-level problems (short rows, stray tabs, bad header).
+  for (const parseProblem of loaded.problems) {
+    const at =
+      parseProblem.line === null ? where : `${where}:${parseProblem.line}`;
+    fail(3, `${at}: ${parseProblem.message}`);
+  }
+  const missingColumns = REQUIRED_COLUMNS.filter(
+    (column) => !loaded.columns.includes(column),
+  );
+  if (missingColumns.length > 0) {
+    fail(
+      3,
+      `${where}: missing required column(s) ${missingColumns.map((c) => `"${c}"`).join(", ")}` +
+        ` (header: ${loaded.columns.join(", ") || "none"})` +
+        " — skipping this bank's row checks until the header is fixed",
+    );
+    // Without `front`/`back`/`id` every row would report the same missing
+    // value, burying the one problem that matters under a screen of noise.
+    continue;
+  }
+  if (loaded.words.length === 0) {
+    fail(3, `${where}: bank has no word rows`);
+  }
+  if (!loaded.text.endsWith("\n")) {
+    warn(`${where}: file does not end with a newline`);
+  }
+
+  // Invariants 4 and 5, per word.
+  const seenWordIds = new Map();
+  for (const word of loaded.words) {
+    const at = `${where}:${word.line}`;
+
+    // A column the row stopped short of was already reported as a short row
+    // under invariant 3; saying "back must not be empty" as well would report
+    // one slip twice.
+    if (word.front === "" && !word.missing.includes("front")) {
+      fail(0, `${at}: front must not be empty`);
     }
-    if (typeof word.back !== "string" || word.back === "") {
-      fail(0, `${at} (${word.front}): back must be a non-empty string`);
-    }
-    if (!Array.isArray(word.tags)) {
-      fail(
-        0,
-        `${at} (${word.front}): tags must be an array (may be empty, never absent)`,
-      );
-    } else if (word.tags.some((tag) => typeof tag !== "string" || tag === "")) {
-      fail(0, `${at} (${word.front}): tags must all be non-empty strings`);
+    if (word.back === "" && !word.missing.includes("back")) {
+      fail(0, `${at}: back must not be empty`);
     }
 
-    if (typeof word.id !== "string" || word.id === "") {
-      fail(4, `${at} (${word.front}): id must be a non-empty string`);
-      return;
-    }
-    if (seenIds.has(word.id)) {
+    if (word.id === "") {
+      // Unless the row simply stopped short, which invariant 3 already covers.
+      if (!word.missing.includes("id")) fail(4, `${at}: id must not be empty`);
+    } else if (seenWordIds.has(word.id)) {
       fail(
         4,
-        `${where}: duplicate word id "${word.id}" at words[${seenIds.get(word.id)}] and words[${index}]`,
+        `${at}: duplicate word id "${word.id}" (first seen on line ${seenWordIds.get(word.id)})`,
       );
     } else {
-      seenIds.set(word.id, index);
-    }
-    if (typeof word.front === "string" && !isValidWordId(word.id, word.front)) {
-      fail(
-        4,
-        `${at}: id "${word.id}" does not match the slug rules for front ${JSON.stringify(word.front)}`,
-      );
-    }
-  });
-}
-
-// --- manifest --------------------------------------------------------------
-
-const decksByStem = new Map(decks.map((entry) => [entry.stem, entry]));
-const manifestLocales = new Set();
-let manifestEntries = [];
-
-if (manifest) {
-  const where = rel(MANIFEST_PATH);
-
-  if (manifest.schemaVersion !== SCHEMA_VERSION) {
-    fail(
-      0,
-      `${where}: schemaVersion is ${JSON.stringify(manifest.schemaVersion)}, expected ${SCHEMA_VERSION}`,
-    );
-  }
-  if (!Array.isArray(manifest.decks)) {
-    fail(0, `${where}: decks must be an array`);
-  } else {
-    manifestEntries = manifest.decks;
-  }
-
-  // Invariant 6: manifest revision parses and equals the max deck revision.
-  if (!isIso8601(manifest.revision)) {
-    fail(
-      6,
-      `${where}: revision ${JSON.stringify(manifest.revision)} is not an ISO-8601 UTC timestamp`,
-    );
-  }
-  const expectedRevision = [...deckRevisions].sort().at(-1);
-  if (expectedRevision && manifest.revision !== expectedRevision) {
-    fail(
-      6,
-      `${where}: revision ${JSON.stringify(manifest.revision)} !== max deck revision "${expectedRevision}"`,
-    );
-  }
-
-  const referencedStems = new Set();
-
-  manifestEntries.forEach((entry, index) => {
-    const at = `${where}: decks[${index}]${entry?.id ? ` (${entry.id})` : ""}`;
-
-    if (typeof entry.path !== "string" || entry.path === "") {
-      fail(1, `${at}: path must be a non-empty string`);
-      return;
-    }
-    if (path.isAbsolute(entry.path) || entry.path.split("/").includes("..")) {
-      fail(
-        1,
-        `${at}: path "${entry.path}" must be relative to data/ and never use ".."`,
-      );
+      seenWordIds.set(word.id, word.line);
+      if (word.front !== "" && !isValidWordId(word.id, word.front)) {
+        fail(
+          4,
+          `${at}: id "${word.id}" does not match the slug rules for front ${JSON.stringify(word.front)}`,
+        );
+      }
     }
 
-    // Invariant 1: the referenced file exists.
-    const absolute = path.join(DATA_DIR, entry.path);
-    if (!fs.existsSync(absolute)) {
-      fail(1, `${at}: no file at data/${entry.path}`);
-      return;
-    }
-
-    const stem = path.basename(entry.path, ".json");
-    referencedStems.add(stem);
-    const loaded = decksByStem.get(stem);
-    if (!loaded) {
-      fail(
-        1,
-        `${at}: data/${entry.path} is not a readable deck under data/decks`,
-      );
-      return;
-    }
-
-    // Invariant 2: manifest id equals deck id equals filename stem.
-    if (entry.id !== loaded.deck.id) {
-      fail(
-        2,
-        `${at}: manifest id !== deck id ${JSON.stringify(loaded.deck.id)}`,
-      );
-    }
-    if (entry.id !== stem) {
-      fail(2, `${at}: manifest id !== filename stem "${stem}"`);
-    }
-
-    if (entry.name !== loaded.deck.name) {
-      fail(
-        0,
-        `${at}: name ${JSON.stringify(entry.name)} !== deck name ${JSON.stringify(loaded.deck.name)}`,
-      );
-    }
-    if (entry.color !== loaded.deck.color) {
-      fail(
-        0,
-        `${at}: color ${JSON.stringify(entry.color)} !== deck color ${JSON.stringify(loaded.deck.color)}`,
-      );
-    }
-    if (
-      JSON.stringify(entry.languages) !== JSON.stringify(loaded.deck.languages)
-    ) {
-      fail(0, `${at}: languages do not match the deck file`);
-    }
-    checkLanguages(at, entry.languages);
+    // Invariant 5: unbalanced markup is a warning, never a failure.
     for (const side of ["front", "back"]) {
-      const locale = entry.languages?.[side]?.locale;
-      if (typeof locale === "string") manifestLocales.add(locale);
+      for (const message of validateInline(word[side])) {
+        warn(`${at}: ${side} ${JSON.stringify(word[side])}: ${message}`);
+      }
     }
-
-    // Invariant 3: denormalized wordCount and tags match the deck exactly.
-    const actualCount = Array.isArray(loaded.deck.words)
-      ? loaded.deck.words.length
-      : 0;
-    if (entry.wordCount !== actualCount) {
-      fail(
-        3,
-        `${at}: wordCount ${JSON.stringify(entry.wordCount)} !== deck word count ${actualCount}`,
-      );
-    }
-    const actualTags = collectTags(loaded.deck);
-    if (!Array.isArray(entry.tags)) {
-      fail(3, `${at}: tags must be an array`);
-    } else if (JSON.stringify(entry.tags) !== JSON.stringify(actualTags)) {
-      fail(
-        3,
-        `${at}: tags [${entry.tags.join(", ")}] !== deck tags [${actualTags.join(", ")}] (must be sorted and unique)`,
-      );
-    }
-
-    // Invariant 6: per-deck revision matches the deck file.
-    if (entry.revision !== loaded.deck.revision) {
-      fail(
-        6,
-        `${at}: revision ${JSON.stringify(entry.revision)} !== deck revision ${JSON.stringify(loaded.deck.revision)}`,
-      );
-    }
-  });
-
-  // Invariant 1 (other direction): no orphan deck files.
-  for (const { stem, file } of decks) {
-    if (!referencedStems.has(stem)) {
-      fail(1, `${rel(file)}: deck file has no entry in ${where}`);
+    for (const tag of word.tags) {
+      if (hasFormatting(tag)) {
+        warn(
+          `${at}: tag "${tag}" looks like inline markup; tags are plain text`,
+        );
+      }
     }
   }
 }
 
-// --- audio/index.json ------------------------------------------------------
+// Invariant 1, other direction: no bank file without exactly one deck entry.
+for (const name of listBankFiles()) {
+  const bankRelative = `banks/${name}`;
+  const referencing = referencedBanks.get(bankRelative) ?? [];
+  if (referencing.length === 0 && misreferenced.has(bankRelative)) {
+    continue; // Already reported as a wrongly named `bank` path.
+  }
+  if (referencing.length === 0) {
+    fail(
+      1,
+      `${rel(path.join(BANKS_DIR, name))}: orphan bank — no deck in ${libraryWhere} references it`,
+    );
+  } else if (referencing.length > 1) {
+    fail(
+      1,
+      `${rel(path.join(BANKS_DIR, name))}: referenced by ${referencing.length} decks (${referencing.join(", ")}); it must be exactly one`,
+    );
+  }
+}
+
+// --- manifest.json (invariant 6) -------------------------------------------
+
+const manifestWhere = rel(MANIFEST_PATH);
+let committedManifest = null;
+try {
+  committedManifest = fs.readFileSync(MANIFEST_PATH, "utf8");
+} catch (error) {
+  fail(
+    6,
+    `${manifestWhere}: cannot read (${error.message}) — run \`pnpm data:manifest\``,
+  );
+}
+
+let manifest = null;
+if (committedManifest !== null) {
+  let expected = null;
+  try {
+    manifest = buildManifest().manifest;
+    expected = serializeManifest(manifest);
+  } catch (error) {
+    fail(6, `cannot regenerate the manifest: ${error.message}`);
+  }
+  if (expected !== null && expected !== committedManifest) {
+    fail(
+      6,
+      `${manifestWhere} is not what the authored files produce — run \`pnpm data:manifest\` and commit the result`,
+    );
+    // A short diff of the fields most likely to be stale, to save a round trip.
+    let parsed = null;
+    try {
+      parsed = JSON.parse(committedManifest);
+    } catch (error) {
+      fail(6, `${manifestWhere}: cannot parse (${error.message})`);
+    }
+    if (parsed) {
+      if (parsed.schemaVersion !== manifest.schemaVersion) {
+        fail(
+          6,
+          `${manifestWhere}: schemaVersion ${JSON.stringify(parsed.schemaVersion)} != ${manifest.schemaVersion}`,
+        );
+      }
+      if (parsed.revision !== manifest.revision) {
+        fail(
+          6,
+          `${manifestWhere}: revision ${JSON.stringify(parsed.revision)} != expected "${manifest.revision}"`,
+        );
+      }
+      const committedById = new Map(
+        (Array.isArray(parsed.decks) ? parsed.decks : []).map((deck) => [
+          deck?.id,
+          deck,
+        ]),
+      );
+      for (const deck of manifest.decks) {
+        const found = committedById.get(deck.id);
+        if (!found) {
+          fail(6, `${manifestWhere}: deck "${deck.id}" is missing`);
+          continue;
+        }
+        for (const key of ["wordCount", "revision"]) {
+          if (JSON.stringify(found[key]) !== JSON.stringify(deck[key])) {
+            fail(
+              6,
+              `${manifestWhere}: deck "${deck.id}" ${key} ${JSON.stringify(found[key])} != expected ${JSON.stringify(deck[key])}`,
+            );
+          }
+        }
+        if (JSON.stringify(found.tags) !== JSON.stringify(deck.tags)) {
+          fail(
+            6,
+            `${manifestWhere}: deck "${deck.id}" tags ${JSON.stringify(found.tags)} != expected ${JSON.stringify(deck.tags)}`,
+          );
+        }
+      }
+      for (const id of committedById.keys()) {
+        if (!manifest.decks.some((deck) => deck.id === id)) {
+          fail(
+            6,
+            `${manifestWhere}: deck ${JSON.stringify(id)} is not in ${libraryWhere}`,
+          );
+        }
+      }
+    }
+  }
+}
+
+// --- audio/index.json (invariant 7) ----------------------------------------
 
 let clipCount = 0;
 let audioIndex = null;
 if (!fs.existsSync(AUDIO_INDEX_PATH)) {
   fail(
-    5,
-    `${rel(AUDIO_INDEX_PATH)}: missing (an empty index with {} voices and {} clips is valid)`,
+    7,
+    `${rel(AUDIO_INDEX_PATH)}: missing (an empty index — {} voices, {} clips — is valid)`,
   );
 } else {
   try {
     audioIndex = readJson(AUDIO_INDEX_PATH);
   } catch (error) {
-    fail(5, error.message);
+    fail(7, error.message);
   }
 }
 
@@ -329,24 +435,32 @@ if (audioIndex) {
       `${where}: schemaVersion is ${JSON.stringify(audioIndex.schemaVersion)}, expected ${SCHEMA_VERSION}`,
     );
   }
-  if (!isIso8601(audioIndex.generatedAt)) {
-    fail(
-      6,
-      `${where}: generatedAt ${JSON.stringify(audioIndex.generatedAt)} is not an ISO-8601 UTC timestamp`,
-    );
+  for (const key of ["generatedAt", "updatedAt"]) {
+    if (key in audioIndex) {
+      fail(
+        0,
+        `${where}: "${key}" must not exist — the index carries no timestamps`,
+      );
+    }
   }
-  if (
-    !audioIndex.voices ||
-    typeof audioIndex.voices !== "object" ||
-    Array.isArray(audioIndex.voices)
-  ) {
+
+  const isPlainObject = (value) =>
+    value && typeof value === "object" && !Array.isArray(value);
+
+  if (!isPlainObject(audioIndex.voices)) {
     fail(0, `${where}: voices must be an object`);
+  } else {
+    for (const [locale, voice] of Object.entries(audioIndex.voices)) {
+      if (!usedLocales.has(locale)) {
+        fail(7, `${where}: voices["${locale}"] is not a locale any deck uses`);
+      }
+      if (typeof voice !== "string" || voice === "") {
+        fail(0, `${where}: voices["${locale}"] must be a non-empty voice name`);
+      }
+    }
   }
-  if (
-    !audioIndex.clips ||
-    typeof audioIndex.clips !== "object" ||
-    Array.isArray(audioIndex.clips)
-  ) {
+
+  if (!isPlainObject(audioIndex.clips)) {
     fail(0, `${where}: clips must be an object`);
   } else {
     const clips = Object.entries(audioIndex.clips);
@@ -356,66 +470,50 @@ if (audioIndex) {
       const at = `${where}: clips["${key}"]`;
       const separator = key.indexOf(":");
       if (separator <= 0 || separator === key.length - 1) {
-        fail(5, `${at}: key must be \`\${locale}:\${text}\``);
+        fail(7, `${at}: key must be \`\${locale}:\${strippedText}\``);
         continue;
       }
       const locale = key.slice(0, separator);
+      const text = key.slice(separator + 1);
 
-      // Invariant 5 (second half): the locale is one some deck actually uses.
-      if (!manifestLocales.has(locale)) {
-        fail(5, `${at}: locale "${locale}" is not used by any deck`);
+      if (!usedLocales.has(locale)) {
+        fail(7, `${at}: locale "${locale}" is not used by any deck`);
+      }
+      // Clip keys are stripped text: markup in a key means a stale generator.
+      if (stripFormatting(text) !== text) {
+        fail(
+          7,
+          `${at}: key text still contains inline markup; it must be stripped to ${JSON.stringify(stripFormatting(text))}`,
+        );
       }
 
-      if (!clip || typeof clip !== "object") {
-        fail(5, `${at}: must be an object with path, bytes, generatedAt`);
+      if (!isPlainObject(clip)) {
+        fail(7, `${at}: must be an object with path and bytes`);
         continue;
       }
-      if (typeof clip.path !== "string" || clip.path === "") {
-        fail(5, `${at}: path must be a non-empty string`);
-      } else if (
-        path.isAbsolute(clip.path) ||
-        clip.path.split("/").includes("..")
-      ) {
+      if (!isSafeRelativePath(clip.path)) {
         fail(
-          5,
-          `${at}: path "${clip.path}" must be relative to data/ and never use ".."`,
+          7,
+          `${at}: path ${JSON.stringify(clip.path)} must be relative to data/ and never contain ".."`,
         );
       } else {
-        // Invariant 5 (first half): the clip file exists on disk.
         const absolute = path.join(DATA_DIR, clip.path);
         if (!fs.existsSync(absolute)) {
-          fail(5, `${at}: no file at data/${clip.path}`);
-        } else if (typeof clip.bytes === "number") {
-          const actualBytes = fs.statSync(absolute).size;
-          if (clip.bytes !== actualBytes) {
-            fail(
-              5,
-              `${at}: bytes ${clip.bytes} !== actual file size ${actualBytes}`,
-            );
+          fail(7, `${at}: no file at data/${clip.path}`);
+        } else if (Number.isInteger(clip.bytes)) {
+          const actual = fs.statSync(absolute).size;
+          if (clip.bytes !== actual) {
+            fail(7, `${at}: bytes ${clip.bytes} != actual file size ${actual}`);
           }
         }
       }
-      if (
-        typeof clip.bytes !== "number" ||
-        !Number.isInteger(clip.bytes) ||
-        clip.bytes <= 0
-      ) {
-        fail(5, `${at}: bytes must be a positive integer`);
+      if (!Number.isInteger(clip.bytes) || clip.bytes <= 0) {
+        fail(7, `${at}: bytes must be a positive integer`);
       }
-      if (!isIso8601(clip.generatedAt)) {
+      if ("generatedAt" in clip) {
         fail(
-          6,
-          `${at}: generatedAt ${JSON.stringify(clip.generatedAt)} is not an ISO-8601 UTC timestamp`,
-        );
-      }
-    }
-
-    // Voices are keyed by locale too.
-    for (const locale of Object.keys(audioIndex.voices ?? {})) {
-      if (!manifestLocales.has(locale)) {
-        fail(
-          5,
-          `${where}: voices["${locale}"] is not a locale used by any deck`,
+          0,
+          `${at}: generatedAt must not exist — clips carry no timestamps`,
         );
       }
     }
@@ -426,13 +524,20 @@ if (audioIndex) {
 
 const INVARIANT_TITLES = {
   0: "Structure / field types",
-  1: "1. Manifest entries and deck files match one-to-one",
-  2: "2. Deck id == filename stem == manifest id",
-  3: "3. Manifest wordCount and tags match the deck",
-  4: "4. Word ids unique and slug-shaped",
-  5: "5. Audio clips exist on disk and use known locales",
-  6: "6. Revisions parse and manifest revision == max deck revision",
+  1: "1. library.decks[] and banks/ match one-to-one",
+  2: "2. Deck id == bank filename stem",
+  3: "3. Bank columns, no tabs/newlines in fields, no short rows",
+  4: "4. Word ids unique within a bank and slug-shaped",
+  5: "5. Inline formatting balanced (warning only)",
+  6: "6. manifest.json is a fresh regeneration of the authored files",
+  7: "7. audio/index.json clips exist, locales known, keys stripped",
 };
+
+if (warnings.length > 0) {
+  console.log(`${warnings.length} warning(s) (not failures):`);
+  for (const message of warnings) console.log(`  ! ${message}`);
+  console.log("");
+}
 
 if (problems.length > 0) {
   console.error(`data validation FAILED: ${problems.length} problem(s)\n`);
@@ -448,18 +553,28 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-const totalWords = decks.reduce(
-  (sum, entry) => sum + (entry.deck.words?.length ?? 0),
+const totalWords = [...loadedBanks.values()].reduce(
+  (sum, bank) => sum + bank.words.length,
   0,
 );
 console.log("data validation OK");
 console.log(
-  `  ${decks.length} deck(s), ${totalWords} words, ${manifestEntries.length} manifest entry/entries, ${clipCount} audio clip(s)`,
+  `  ${loadedBanks.size} deck(s), ${totalWords} words, ${clipCount} audio clip(s), ` +
+    `${warnings.length} warning(s)`,
 );
-for (const { stem, deck } of decks) {
+for (const { id } of entries) {
+  const bank = loadedBanks.get(id);
+  if (!bank) continue;
+  const entry = manifest?.decks.find((deck) => deck.id === id);
   console.log(
-    `  ${stem}: ${deck.words?.length ?? 0} words, ${collectTags(deck).length} tags, ` +
-      `${deck.languages?.front?.locale} -> ${deck.languages?.back?.locale}, revision ${deck.revision}`,
+    `  ${id}: ${bank.words.length} words, ${collectTags(bank.words).length} tags, ` +
+      `revision ${bank.revision} (${bank.bank})`,
   );
+  if (entry) {
+    console.log(
+      `    languages ${entry.languages?.front?.locale} -> ${entry.languages?.back?.locale}`,
+    );
+  }
 }
-console.log("  all 6 contract invariants satisfied");
+if (manifest) console.log(`  manifest revision: ${manifest.revision}`);
+console.log("  all 7 contract invariants satisfied");

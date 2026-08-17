@@ -14,9 +14,10 @@ calls an API and never needs a key.
 .
 ├── frontend/        Vite + React + TypeScript SPA (the whole app)
 ├── data/            decks, and generated audio — the "database"
-│   ├── manifest.json
-│   ├── decks/*.json
-│   └── audio/
+│   ├── library.json     authored: deck metadata
+│   ├── banks/*.tsv      authored: one word per line
+│   ├── manifest.json    generated: the above, plus derived fields
+│   └── audio/           generated: clips + lookup index
 ├── tools/
 │   ├── data-tools/  validate decks, rebuild the manifest
 │   └── audio-gen/   generate missing pronunciation audio via Gemini TTS
@@ -36,7 +37,7 @@ Requires Node 20+ and [pnpm](https://pnpm.io) (the repo pins a version via
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:5173
+pnpm dev          # http://localhost:3000
 ```
 
 The dev server serves the repo's real `data/` folder at `/data`, so development
@@ -51,22 +52,42 @@ and production read data through identical URLs.
 | `pnpm ci:check`      | Biome in CI mode (no writes)                             |
 | `pnpm typecheck`     | `tsc --noEmit`                                           |
 | `pnpm data:validate` | Check `data/` against the contract                       |
-| `pnpm data:manifest` | Rebuild `data/manifest.json` from the deck files         |
+| `pnpm data:manifest` | Rebuild `data/manifest.json` from `library.json` + banks  |
 | `pnpm data:audio`    | Generate missing pronunciation audio (needs a Gemini key)|
 
 Biome replaces both Prettier and ESLint here; a Husky pre-commit hook runs it on
-staged files.
+staged files. Nothing bumps `package.json`'s version: the deployed build is
+identified by the commit it was built from, shown in the app's footer.
 
 ## Adding or editing a deck
 
-1. Edit or add a file under `data/decks/`, following
-   [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). Every word needs a stable
-   `id` — **never** change or renumber an existing one, because that is the key a
-   learner's saved progress is stored under.
-2. Bump the deck's `revision` to the current UTC timestamp. That is what tells a
-   browser its cached copy is stale.
+Word banks are tab-separated, one word per line, with a header row:
+
+```tsv
+id	front	back	tags
+ik	ik	I	introduction
+de-man	de man	the man	introduction
+```
+
+1. Append rows to a file under `data/banks/`, or add a new bank plus an entry in
+   `data/library.json`. See [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md).
+2. Give each word a stable `id` (a slug of its front text). **Never change or
+   renumber an existing one** — it is the key a learner's saved progress is
+   stored under, so editing it silently resets that word.
 3. `pnpm data:manifest && pnpm data:validate`.
 4. Commit and push to `main`.
+
+There is no `revision` to bump: it is a content hash of the bank file, computed
+by `data:manifest`, so a browser notices a stale cache on its own.
+
+`front` and `back` accept a little inline formatting — `**bold**`, `*italic*`,
+`__underline__` — which is stripped before text-to-speech, so adding emphasis
+never regenerates audio.
+
+Tabs are the separator because commas are everywhere in this content ("well,
+fine", tag lists, `alsjeblieft (a.u.b.)`) and tabs are nowhere, which means no
+quoting rules to get wrong. One word is one line, so diffs stay readable and
+appending is safe.
 
 Pushing then does two things on its own: the site redeploys, and the audio
 workflow generates clips for any words that do not have one yet and commits them

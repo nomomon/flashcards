@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAudioIndex } from "@/lib/data/queries";
 import { dataUrl } from "@/lib/data/source";
+import { stripFormatting } from "@/lib/markup";
 
 /**
  * Pronunciation playback.
@@ -18,8 +19,19 @@ interface UseSpeakResult {
   isAvailable: (text: string, locale: string) => boolean;
 }
 
-/** Clip keys are exactly `${locale}:${text}` over the raw word text. */
-const clipKey = (text: string, locale: string) => `${locale}:${text}`;
+/**
+ * What actually gets voiced: the card text with inline formatting removed.
+ *
+ * Both tiers need this, and for the same reason. The audio generator keys clips
+ * on the stripped text (see DATA_CONTRACT "Inline formatting"), so keying the
+ * lookup on the raw text makes every formatted word miss its clip and fall
+ * silent. And the speech-synthesis fallback would otherwise pronounce the
+ * delimiters - "star star man star star".
+ */
+const spokenText = (text: string) => stripFormatting(text);
+
+/** Clip keys are exactly `${locale}:${strippedText}`. */
+const clipKey = (spoken: string, locale: string) => `${locale}:${spoken}`;
 
 function getSpeechSynthesis(): SpeechSynthesis | null {
   if (typeof window === "undefined") return null;
@@ -101,14 +113,15 @@ export function useSpeak(): UseSpeakResult {
     setIsPlaying(false);
   }, []);
 
+  /** `spoken` is already stripped; the public entry points do that once. */
   const speakWithSynthesis = useCallback(
-    (text: string, locale: string) => {
+    (spoken: string, locale: string) => {
       const synthesis = getSpeechSynthesis();
       if (!synthesis) return;
       const voice = findVoice(voices, locale);
       if (!voice) return;
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(spoken);
       utterance.voice = voice;
       utterance.lang = voice.lang;
       utterance.onstart = () => setIsPlaying(true);
@@ -121,13 +134,14 @@ export function useSpeak(): UseSpeakResult {
 
   const speak = useCallback(
     (text: string, locale: string) => {
-      if (text === "") return;
+      const spoken = spokenText(text);
+      if (spoken === "") return;
       // A new request always wins over an in-flight one.
       stop();
 
-      const clip = audioIndex?.clips[clipKey(text, locale)];
+      const clip = audioIndex?.clips[clipKey(spoken, locale)];
       if (!clip) {
-        speakWithSynthesis(text, locale);
+        speakWithSynthesis(spoken, locale);
         return;
       }
 
@@ -138,7 +152,7 @@ export function useSpeak(): UseSpeakResult {
         // Indexed but unplayable (file pruned, codec unsupported, autoplay
         // blocked). Try TTS, then give up quietly.
         setIsPlaying(false);
-        speakWithSynthesis(text, locale);
+        speakWithSynthesis(spoken, locale);
       });
     },
     [audioIndex, getAudioElement, speakWithSynthesis, stop],
@@ -146,8 +160,9 @@ export function useSpeak(): UseSpeakResult {
 
   const isAvailable = useCallback(
     (text: string, locale: string) => {
-      if (text === "") return false;
-      if (audioIndex?.clips[clipKey(text, locale)]) return true;
+      const spoken = spokenText(text);
+      if (spoken === "") return false;
+      if (audioIndex?.clips[clipKey(spoken, locale)]) return true;
       return findVoice(voices, locale) !== undefined;
     },
     [audioIndex, voices],

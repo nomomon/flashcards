@@ -1,16 +1,11 @@
 import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { AUDIO_INDEX_PATH } from "./paths.mjs";
+import { AUDIO_INDEX_PATH, rel } from "./paths.mjs";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
-const EMPTY_INDEX = {
-  schemaVersion: SCHEMA_VERSION,
-  generatedAt: null,
-  voices: {},
-  clips: {},
-};
+const EMPTY_INDEX = { schemaVersion: SCHEMA_VERSION, voices: {}, clips: {} };
 
 /**
  * Read data/audio/index.json. A missing, empty, or unparseable file is treated
@@ -22,44 +17,68 @@ export async function readAudioIndex() {
   try {
     raw = await fs.readFile(AUDIO_INDEX_PATH, "utf8");
   } catch (error) {
-    if (error.code === "ENOENT") return { ...EMPTY_INDEX };
+    if (error.code === "ENOENT") return emptyIndex();
     throw error;
   }
 
-  if (raw.trim() === "") return { ...EMPTY_INDEX };
+  if (raw.trim() === "") return emptyIndex();
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
   } catch {
     console.warn(
-      "warn  data/audio/index.json is not valid JSON; treating it as empty.",
+      `warn  ${rel(AUDIO_INDEX_PATH)} is not valid JSON; treating it as empty.`,
     );
-    return { ...EMPTY_INDEX };
+    return emptyIndex();
   }
 
   if (parsed?.schemaVersion !== SCHEMA_VERSION) {
     throw new Error(
-      `data/audio/index.json has schemaVersion ${parsed?.schemaVersion}, ` +
-        `expected ${SCHEMA_VERSION}. Refusing to guess at its shape.`,
+      `${rel(AUDIO_INDEX_PATH)} has schemaVersion ${parsed?.schemaVersion}, ` +
+        `expected ${SCHEMA_VERSION}. Refusing to guess at its shape.\n` +
+        "Schema 2 dropped every timestamp; the simplest migration is to delete " +
+        "data/audio/ and rerun, which repopulates from scratch.",
     );
   }
 
   return {
     schemaVersion: SCHEMA_VERSION,
-    generatedAt: parsed.generatedAt ?? null,
-    voices: isObject(parsed.voices) ? parsed.voices : {},
-    clips: isObject(parsed.clips) ? parsed.clips : {},
+    voices: isObject(parsed.voices) ? { ...parsed.voices } : {},
+    clips: normalizeClips(parsed.clips),
   };
 }
 
-/** Stable serialization: sorted keys, 2-space indent, trailing newline. */
-export function serializeAudioIndex({ generatedAt, voices, clips }) {
+/**
+ * Keep only the fields schema 2 defines. Anything else a hand-edit or an older
+ * writer left behind (a `generatedAt`, say) is dropped here rather than being
+ * copied forward, which is what keeps rewrites byte-stable.
+ */
+function normalizeClips(clips) {
+  if (!isObject(clips)) return {};
+  const out = {};
+  for (const [key, entry] of Object.entries(clips)) {
+    if (!isObject(entry)) continue;
+    out[key] = clipEntry(entry);
+  }
+  return out;
+}
+
+/** One clip entry, with a fixed key order so serialization is stable. */
+export function clipEntry({ path: clipPath, bytes }) {
+  return { path: clipPath, bytes };
+}
+
+/**
+ * Stable serialization: sorted keys, 2-space indent, trailing newline, and no
+ * timestamp anywhere, so regenerating unchanged content produces a byte-
+ * identical file (docs/DATA_CONTRACT.md).
+ */
+export function serializeAudioIndex({ voices, clips }) {
   const payload = {
     schemaVersion: SCHEMA_VERSION,
-    generatedAt,
     voices: sortKeys(voices),
-    clips: sortKeys(clips),
+    clips: sortKeys(clips, clipEntry),
   };
   return `${JSON.stringify(payload, null, 2)}\n`;
 }
@@ -84,9 +103,15 @@ export async function writeAudioIndexAtomically(contents) {
   }
 }
 
-function sortKeys(record) {
+function emptyIndex() {
+  return { ...EMPTY_INDEX, voices: {}, clips: {} };
+}
+
+function sortKeys(record, mapValue = (value) => value) {
   return Object.fromEntries(
-    Object.entries(record).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+    Object.entries(record)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([key, value]) => [key, mapValue(value)]),
   );
 }
 

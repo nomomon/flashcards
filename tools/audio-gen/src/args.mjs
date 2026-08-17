@@ -4,11 +4,14 @@ Generate text-to-speech audio for every word in every deck.
 Usage
   node tools/audio-gen/src/generate.mjs [options]
 
-Each word needs two clips: the front text in the deck's front locale and the
-back text in its back locale. Clips are deduplicated across decks by the
-\`\${locale}:\${text}\` key, generated with the Gemini TTS API, encoded to
-Opus-in-Ogg with ffmpeg, and written to data/audio/<locale>/<hash>.ogg with a
-lookup table at data/audio/index.json.
+Decks come from data/manifest.json; words come from each deck's tab-separated
+bank under data/banks/. Each word needs two clips: the front text in the deck's
+front locale and the back text in its back locale. Inline formatting
+(\`**bold**\`, \`*italic*\`, \`__underline__\`) is stripped before both speaking
+and keying, so restyling a word never regenerates its audio. Clips are
+deduplicated across decks by the \`\${locale}:\${strippedText}\` key, generated
+with the Gemini TTS API, encoded to Opus-in-Ogg with ffmpeg, and written to
+data/audio/<locale>/<hash>.ogg with a lookup table at data/audio/index.json.
 
 The run is incremental: a clip is generated only when its key is missing from
 the index or its file is missing from disk. Clips whose text no longer appears

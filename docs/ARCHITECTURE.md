@@ -15,16 +15,21 @@ features/          domain UI, grouped by the thing it serves
    ├── decks/      browsing, previewing and configuring a deck
    └── study/      running a study session
    ↓
-components/ui/     design-system primitives. Domain-free, vendored from shadcn.
+components/        rich-text.tsx, plus ui/ design-system primitives
+                   (domain-free, vendored from shadcn)
    ↓
 lib/               the only layer that talks to the network or localStorage
-   ├── data/       remote deck data: fetch, validate, cache
+   ├── data/       remote deck data: fetch, parse TSV, validate, cache
+   ├── markup/     the inline-formatting parser and its plain-text projection
    ├── progress/   local learner progress: read, write, cache
    ├── audio/      clip playback
    └── query/      TanStack Query client + persistence wiring
    ↓
 types/             plain interfaces, zero runtime code
 ```
+
+`build-info.ts` sits outside these layers: it exposes the commit the bundle was
+built from, injected by `vite.config.ts`. See "Identifying a build" below.
 
 A component that fetches, or a `lib` module that imports a component, is a layer
 violation. The previous version leaked all three ways — pages called Firestore
@@ -227,6 +232,39 @@ Only `data` queries are persisted (`dehydrateOptions.shouldDehydrateQuery`);
 `progress` queries are not, since localStorage already owns that state and
 persisting it would create two writers for one fact.
 
+## `lib/markup/` — inline formatting
+
+Card text may carry a tiny inline-markdown subset (`**bold**`, `*italic*`,
+`__underline__`); `docs/DATA_CONTRACT.md` is the authority on the syntax.
+
+```ts
+export type InlineNode =
+  | { type: "text"; value: string }
+  | { type: "strong" | "em" | "underline"; children: InlineNode[] };
+
+export function parseInline(text: string): InlineNode[];
+export function stripFormatting(text: string): string;
+```
+
+Two rules make this safe rather than a liability:
+
+1. **Parsing never throws, and never rejects.** Unbalanced or unrecognized
+   delimiters become literal text. A deck is written by a human or an AI and
+   pushed without review, so malformed markup must degrade to something readable
+   rather than break a card mid-session.
+2. **The output is React elements, never HTML.** `<RichText>` maps nodes to
+   `<strong>`/`<em>`/`<u>`; nothing reaches `dangerouslySetInnerHTML`. Since a
+   workflow can write these strings, treating them as markup-to-parse instead of
+   HTML-to-sanitize removes the injection question entirely instead of answering
+   it.
+
+`stripFormatting` is the plain-text projection, and it is load-bearing in three
+places: audio clip keys, text sent to speech synthesis, and `aria-label`s. It is
+reimplemented in `tools/data-tools` and `tools/audio-gen` (both zero-dependency
+workspaces that cannot import from here), so the three copies must agree
+exactly — a disagreement shows up as audio that silently goes missing for
+formatted words.
+
 ## `lib/audio/` — playback
 
 ```ts
@@ -254,3 +292,20 @@ Code-based TanStack Router route tree (no codegen). Two routes:
 Search params are validated with zod in `validateSearch`, so a hand-edited URL
 produces a typed default rather than a runtime crash. Study options live in the
 URL, not component state, so a session survives a refresh and can be linked.
+
+## Identifying a build
+
+`package.json`'s `version` is not bumped per commit and carries no meaning here.
+Nobody installs this app by version number, so a hand-maintained semver would be
+decoration that can quietly disagree with what is actually deployed.
+
+Instead `vite.config.ts` injects the commit at build time (`GITHUB_SHA` in CI,
+`git rev-parse` locally, `"unknown"` when neither is available), and
+`build-info.ts` exposes it. A footer renders it on every route, linked to the
+commit on GitHub. That makes "is the live site the code I think it is?" a
+question you answer by looking, not by trusting a number someone remembered to
+increment.
+
+Deck data versions itself separately and for a different reason: each deck's
+`revision` is a content hash of its bank file, which is what drives cache
+invalidation. See `docs/DATA_CONTRACT.md`.

@@ -9,12 +9,34 @@ The file layout and the index shape are fixed by
 [`docs/DATA_CONTRACT.md`](../../docs/DATA_CONTRACT.md); this package is one of
 the three places that encode that contract.
 
+## What it reads
+
+Schema 2, so there are two inputs:
+
+- `data/manifest.json` — the deck list. Each entry supplies the deck's `id`,
+  its `languages.front`/`languages.back` (label plus locale) and a `bank` path.
+- `data/banks/<deckId>.tsv` — the words, tab-separated with a header row.
+
+Columns are addressed **by header name** (`id`, `front`, `back`, `tags`), so
+reordering them is fine and unknown columns are ignored. Blank lines and `#`
+comment lines are skipped. A row may omit trailing *optional* columns, so
+`ik⇥ik⇥I` and `ik⇥ik⇥I⇥` both mean "no tags"; omitting a required column, or
+having more fields than the header (a stray tab), is an error that names the
+line. The reader is ~50 lines in `src/tsv.mjs`: since the contract forbids a tab
+or a newline inside any field, a line is `split("\t")` and there is no
+quoted-field mode to get wrong. It is a deliberate re-implementation rather than
+an import from `tools/data-tools`, because this package has no workspace
+dependencies.
+
+A schema-1 manifest, or a schema-2 entry still carrying a schema-1 `path`, stops
+the run with a message telling you to regenerate rather than being guessed at.
+
 ## What it does
 
 For every word it needs two clips: the `front` text spoken in the deck's
 `languages.front.locale`, and the `back` text in `languages.back.locale`. Clips
-are deduplicated across all decks by the `` `${locale}:${text}` `` key, so a word
-that appears in three decks is voiced once. The filename is
+are deduplicated across all decks by the `` `${locale}:${strippedText}` `` key,
+so a word that appears in three decks is voiced once. The filename is
 `sha1(key)` truncated to 10 hex characters, which is what makes the whole thing
 idempotent.
 
@@ -26,6 +48,29 @@ Runs are **incremental**. A clip is generated only when:
 
 So adding words to a deck generates only the new words, and deleting
 `data/audio/` entirely and rerunning repopulates everything from scratch.
+
+## Formatting is stripped before TTS
+
+`front` and `back` may carry the tiny inline-markdown subset from the data
+contract: `**bold**`, `*italic*`, `__underline__`, with `\*` `\_` `\\` escapes.
+None of it is spoken. `src/format.mjs` strips it, and the stripped text is used
+for **both** things that matter:
+
+- the text sent to Gemini — the model would otherwise try to pronounce the
+  asterisks, or read them as emphasis cues;
+- the clip key, and therefore the filename.
+
+So **changing formatting does not regenerate audio.** Editing `de man` to
+`de **man**` leaves the key `nl-NL:de man` untouched: the existing clip is not
+orphaned, nothing is pruned, and the run reports zero to generate. The same
+applies in reverse and to purely cosmetic churn of any kind. Only a change to the
+*words* costs an API call.
+
+Unbalanced markup is literal text, never an error — `2 * 3` is spoken as "2 * 3"
+and keyed that way, because data must not be able to break a card.
+`tools/data-tools/src/markup.mjs` is the reference implementation of this subset;
+`src/format.mjs` mirrors it rule for rule and must stay byte-for-byte identical
+to it. If you change one, change both.
 
 Clips whose text no longer appears in any deck are pruned, file and index entry
 together, but only after a run that generated everything it set out to generate.
@@ -171,8 +216,14 @@ a few thousand words stay comfortably inside a GitHub Pages deployment.
 - **`ffprobe` reports 48000 Hz on the output.** That is normal: an Ogg Opus
   stream always advertises 48 kHz regardless of the encoder's internal rate.
   `-ar 24000` still does its job of narrowing the encoded band.
-- `data/audio/index.json` is rewritten atomically (temp file plus rename) and
-  only when something changed, so repeat runs produce no diff and no empty
-  commit.
+- **`data/audio/index.json` carries no timestamps.** Schema 2 dropped
+  `generatedAt`, top-level and per-clip, so the file is a pure function of the
+  clips that exist: rewriting it unchanged produces byte-identical output, and CI
+  can assert the committed index is exactly what the current inputs produce. A
+  check like that is meaningless once the output contains a clock. Keys are
+  sorted, the indent is 2 spaces, and there is a trailing newline.
+- It is rewritten atomically (temp file plus rename) and only when something
+  changed, so repeat runs produce no diff and no empty commit.
+- A schema-1 index is not migrated. Delete `data/audio/` and rerun.
 - `FLASHCARDS_DATA_DIR` points the generator at a scratch copy of `data/`. Only
   useful for testing the generator itself.

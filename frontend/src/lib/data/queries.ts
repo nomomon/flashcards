@@ -19,9 +19,10 @@ import {
  * Query keys and options for remote deck data.
  *
  * The sync mechanism in one sentence: the deck key contains the deck's
- * `revision`, so editing a deck produces a new key, the new key misses, the
- * deck is refetched, and the old entry is garbage-collected. Nothing has to
- * "invalidate" anything.
+ * `revision`, which is a hash of its bank's contents, so editing a word
+ * produces a new key, the new key misses, the deck is refetched, and the old
+ * entry is garbage-collected. Nothing has to "invalidate" anything, and nobody
+ * has to remember to bump a version.
  */
 
 export const dataKeys = {
@@ -43,7 +44,6 @@ const unresolvedDeckKey = (deckId: string) =>
 
 const EMPTY_AUDIO_INDEX: AudioIndex = {
   schemaVersion: DATA_SCHEMA_VERSION,
-  generatedAt: new Date(0).toISOString(),
   voices: {},
   clips: {},
 };
@@ -63,7 +63,10 @@ export function manifestQueryOptions(): UseQueryOptions<Manifest> {
   };
 }
 
-/** A deck at a given revision is immutable, so it never goes stale. */
+/**
+ * A deck at a given revision is immutable - the revision *is* the hash of its
+ * bank - so it never goes stale and never needs refetching.
+ */
 export function deckQueryOptions(summary: DeckSummary): UseQueryOptions<Deck> {
   return {
     queryKey: dataKeys.deck(summary.id, summary.revision),

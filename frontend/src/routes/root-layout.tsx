@@ -2,16 +2,45 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Link, Outlet } from "@tanstack/react-router";
 import { HomeIcon, RotateCcwIcon, TriangleAlertIcon } from "lucide-react";
 
+import { buildLabel, commitUrl } from "@/build-info";
 import { Button } from "@/components/ui/button";
 
 /** The one page shell: mobile-first, centred, same padding on every route. */
 export function RootLayout() {
   return (
     <div className="min-h-dvh bg-background">
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main className="mx-auto max-w-3xl px-4 pt-8">
         <Outlet />
       </main>
+      <BuildFooter />
     </div>
+  );
+}
+
+/**
+ * Which commit am I looking at? A diagnostic, not a feature: it lives at the
+ * very bottom of every route, quiet enough to ignore until the answer to
+ * "is the fix deployed yet?" is needed.
+ */
+function BuildFooter() {
+  const label = buildLabel();
+  const url = commitUrl();
+
+  return (
+    <footer className="mx-auto mt-16 max-w-3xl px-4 pb-8 text-center text-xs text-muted-foreground">
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="underline-offset-4 hover:underline"
+        >
+          {label}
+        </a>
+      ) : (
+        <span>{label}</span>
+      )}
+    </footer>
   );
 }
 

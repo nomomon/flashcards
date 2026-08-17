@@ -11,39 +11,46 @@ import type {
 } from "@/types/deck";
 
 /**
- * Runtime validation for everything fetched from `data/`. The hand-written
- * interfaces in `types/deck.ts` stay the source of truth; these schemas mirror
- * them, and the compile-time assertions at the bottom of this file fail the
- * build if the two ever drift.
+ * Runtime validation for everything the app reads out of `data/`. The
+ * hand-written interfaces in `types/deck.ts` stay the source of truth; these
+ * schemas mirror them, and the compile-time assertions at the bottom of this
+ * file fail the build if the two ever drift.
  *
  * Deliberately strict about the things that silently break the UI (colors,
- * locales, relative paths, ISO revisions) and deliberately lax about unknown
+ * locales, relative paths, revision hashes) and deliberately lax about unknown
  * object keys: the contract says `schemaVersion` is bumped only on breaking
  * changes, so an additive field from a newer pipeline must not break an older
- * client. Unknown keys are stripped, not rejected.
+ * client. Unknown keys are stripped, not rejected - the same reason a bank's
+ * unknown columns are ignored rather than refused.
  */
 
 /** The only `schemaVersion` this client understands. */
-export const DATA_SCHEMA_VERSION = 1;
+export const DATA_SCHEMA_VERSION = 2;
 
 /**
- * Refuses data from a future (or past) contract instead of guessing at it.
- * Typed as `number` rather than a literal so the schema output stays assignable
- * to the interfaces, which declare `schemaVersion: number`.
+ * Refuses data from a different contract instead of guessing at it. Typed as
+ * `number` rather than a literal so the schema output stays assignable to the
+ * interfaces, which declare `schemaVersion: number`.
  */
 const schemaVersion = z
   .number()
   .int("schemaVersion must be an integer")
   // The `: boolean` annotation keeps zod's output type `number` (matching the
-  // interfaces) instead of letting it narrow to the literal `1`.
+  // interfaces) instead of letting it narrow to the literal `2`.
   .refine((value): boolean => value === DATA_SCHEMA_VERSION, {
     message: `unsupported schemaVersion: this build understands ${DATA_SCHEMA_VERSION} only`,
   });
 
-/** ISO-8601 instant, e.g. "2026-08-17T00:00:00.000Z". */
-const isoTimestamp = z
+/**
+ * A revision is the first 12 hex characters of a sha256 over content, e.g.
+ * `3ab8f10c92d4`. Checking the shape is worth it because a revision is a cache
+ * key: anything that is not a content hash (a number, `null`, a truncated
+ * string) would quietly key a deck under a value that never changes, and the
+ * app would then serve a stale deck forever.
+ */
+const contentRevision = z
   .string()
-  .datetime({ offset: true, message: "expected an ISO-8601 timestamp" });
+  .regex(/^[0-9a-fA-F]{12}$/, "expected a 12-character hex content revision");
 
 /** `#RRGGBB`, per the data contract. */
 const hexColor = z
@@ -94,22 +101,18 @@ const deckLanguagesSchema = z.object({
   back: languageInfoSchema,
 });
 
-const wordSchema = z.object({
+/**
+ * One row of a bank, after the TSV has been split into named columns and `tags`
+ * has been split on commas. `front` and `back` are checked for presence only:
+ * their inline formatting is the renderer's business and can never be invalid
+ * (unbalanced markup renders literally, by contract).
+ */
+export const bankRowSchema = z.object({
   id: slugId,
   front: nonEmptyText,
   back: nonEmptyText,
   // May be empty, never absent.
   tags: z.array(nonEmptyText),
-});
-
-export const deckSchema = z.object({
-  schemaVersion,
-  id: slugId,
-  name: nonEmptyText,
-  color: hexColor,
-  revision: isoTimestamp,
-  languages: deckLanguagesSchema,
-  words: z.array(wordSchema),
 });
 
 const deckSummarySchema = z.object({
@@ -119,29 +122,47 @@ const deckSummarySchema = z.object({
   languages: deckLanguagesSchema,
   wordCount: z.number().int().nonnegative(),
   tags: z.array(nonEmptyText),
-  revision: isoTimestamp,
-  path: relativeDataPath,
+  revision: contentRevision,
+  bank: relativeDataPath,
+  // Deliberately just a string: the set of renderable icons is a frontend
+  // concern, and an unknown name degrades to the fallback icon rather than
+  // rejecting the whole manifest.
+  icon: nonEmptyText.optional(),
 });
 
 export const manifestSchema = z.object({
   schemaVersion,
-  revision: isoTimestamp,
+  revision: contentRevision,
   decks: z.array(deckSummarySchema),
 });
 
 const audioClipSchema = z.object({
   path: relativeDataPath,
   bytes: z.number().int().nonnegative(),
-  generatedAt: isoTimestamp,
 });
 
 export const audioIndexSchema = z.object({
   schemaVersion,
-  generatedAt: isoTimestamp,
   // locale -> voice name
   voices: z.record(z.string(), nonEmptyText),
-  // `${locale}:${text}` -> clip
+  // `${locale}:${strippedText}` -> clip
   clips: z.record(z.string(), audioClipSchema),
+});
+
+/**
+ * A whole assembled deck. Not applied at runtime - `parseBank` validates row by
+ * row so that a bad row can be reported with its line number, and the rest of
+ * the deck comes from an already-validated manifest entry. It exists so that
+ * `Deck` is covered by the drift assertions below like every other shape.
+ */
+const deckSchema = z.object({
+  schemaVersion,
+  id: slugId,
+  name: nonEmptyText,
+  color: hexColor,
+  revision: contentRevision,
+  languages: deckLanguagesSchema,
+  words: z.array(bankRowSchema),
 });
 
 /**
@@ -160,8 +181,8 @@ export type LanguageInfoSchemaMatches = Expect<
 export type DeckLanguagesSchemaMatches = Expect<
   Mutual<z.output<typeof deckLanguagesSchema>, DeckLanguages>
 >;
-export type WordSchemaMatches = Expect<
-  Mutual<z.output<typeof wordSchema>, Word>
+export type BankRowSchemaMatches = Expect<
+  Mutual<z.output<typeof bankRowSchema>, Word>
 >;
 export type DeckSchemaMatches = Expect<
   Mutual<z.output<typeof deckSchema>, Deck>

@@ -8,10 +8,14 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 
 export const REPO_ROOT = path.resolve(here, "..", "..", "..");
 export const DATA_DIR = path.join(REPO_ROOT, "data");
-export const DECKS_DIR = path.join(DATA_DIR, "decks");
+export const BANKS_DIR = path.join(DATA_DIR, "banks");
 export const AUDIO_DIR = path.join(DATA_DIR, "audio");
+export const LIBRARY_PATH = path.join(DATA_DIR, "library.json");
 export const MANIFEST_PATH = path.join(DATA_DIR, "manifest.json");
 export const AUDIO_INDEX_PATH = path.join(AUDIO_DIR, "index.json");
+
+// Legacy schema-1 location, kept only so the migration can find its input.
+export const LEGACY_DECKS_DIR = path.join(DATA_DIR, "decks");
 
 /** Path relative to the repo root, for readable log lines. */
 export function rel(absolutePath) {

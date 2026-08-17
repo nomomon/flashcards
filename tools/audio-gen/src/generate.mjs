@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { HELP, parseArgs, UsageError } from "./args.mjs";
 import {
+  clipEntry,
   readAudioIndex,
   serializeAudioIndex,
   writeAudioIndexAtomically,
@@ -43,8 +44,9 @@ async function main() {
     required.length === allRequired.length
       ? `${allRequired.length} distinct clip(s)`
       : `${required.length} of ${allRequired.length} distinct clip(s) in scope`;
+  const wordCount = decks.reduce((total, deck) => total + deck.words.length, 0);
   console.log(
-    `${decks.length} deck(s), ${scope}: ` +
+    `${decks.length} deck(s), ${wordCount} word(s), ${scope}: ` +
       `${plan.toGenerate.length} to generate, ${plan.keptCount} up to date, ` +
       `${plan.toPrune.length} to prune` +
       (plan.pruneBlockedReason
@@ -252,11 +254,7 @@ async function generateAll({ tasks, apiKey, voiceOverrides, concurrency }) {
         key: task.key,
         locale: task.locale,
         voiceName,
-        entry: {
-          path: task.path,
-          bytes: ogg.length,
-          generatedAt: new Date().toISOString(),
-        },
+        entry: clipEntry({ path: task.path, bytes: ogg.length }),
       });
     } catch (error) {
       failed.push({ key: task.key, message: error.message });
@@ -334,22 +332,22 @@ function resolveVoices({ clips, generated, previousVoices, voiceOverrides }) {
   return voices;
 }
 
-/** Write only when something actually changed, to keep diffs and commits honest. */
+/**
+ * Write only when something actually changed, to keep diffs and commits honest.
+ * The index carries no timestamp, so an unchanged run is byte-identical anyway;
+ * skipping the write just avoids touching the file's mtime.
+ */
 async function persistIndex({ index, clips, voices }) {
+  const contents = serializeAudioIndex({ voices, clips });
   const unchanged =
-    stable(clips) === stable(index.clips) &&
-    stable(voices) === stable(index.voices);
+    contents ===
+    serializeAudioIndex({ voices: index.voices, clips: index.clips });
 
   if (unchanged && (await fileExists(AUDIO_INDEX_PATH))) {
     console.log(`index ${rel(AUDIO_INDEX_PATH)} unchanged`);
     return;
   }
 
-  const contents = serializeAudioIndex({
-    generatedAt: unchanged ? index.generatedAt : new Date().toISOString(),
-    voices,
-    clips,
-  });
   await writeAudioIndexAtomically(contents);
   console.log(`index ${rel(AUDIO_INDEX_PATH)} written`);
 }
@@ -377,14 +375,6 @@ async function fileExists(absolutePath) {
   } catch {
     return false;
   }
-}
-
-function stable(record) {
-  return JSON.stringify(
-    Object.fromEntries(
-      Object.entries(record).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
-    ),
-  );
 }
 
 function formatBytes(bytes) {

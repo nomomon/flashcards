@@ -1,9 +1,10 @@
-import { AlignLeftIcon, PawPrintIcon } from "lucide-react";
+import { AlignLeftIcon } from "lucide-react";
 
 import { Progress } from "@/components/ui/progress";
 import { useDeckProgress } from "@/lib/progress/queries";
 import type { DeckSummary } from "@/types/deck";
 import type { DeckProgress } from "@/types/progress";
+import { DeckIcon } from "./deck-icon";
 
 interface DeckTileProps {
   deck: DeckSummary;
@@ -31,7 +32,10 @@ export function DeckTile({ deck, onSelect }: DeckTileProps) {
         <h2 className="font-heading text-lg leading-tight font-semibold">
           {deck.name}
         </h2>
-        <PawPrintIcon className="mx-auto size-12 stroke-1 opacity-40" />
+        <DeckIcon
+          name={deck.icon}
+          className="mx-auto size-12 stroke-1 opacity-40"
+        />
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-1.5">

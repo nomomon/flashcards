@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
+import { RichText } from "@/components/rich-text";
 import { Button } from "@/components/ui/button";
 import {
   DrawerClose,
@@ -81,9 +82,11 @@ export function DeckPreview({ deck }: { deck: DeckSummary }) {
                   key={word.id}
                   className="flex items-baseline justify-between gap-4 rounded-lg bg-muted px-4 py-2"
                 >
-                  <span className="font-medium">{word.front}</span>
+                  <span className="font-medium">
+                    <RichText text={word.front} />
+                  </span>
                   <span className="text-right text-muted-foreground">
-                    {word.back}
+                    <RichText text={word.back} />
                   </span>
                 </div>
               ))

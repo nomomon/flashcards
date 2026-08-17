@@ -1,10 +1,25 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
+import { stripFormatting } from "./format.mjs";
 import { dataPath, MANIFEST_PATH, rel } from "./paths.mjs";
+import { parseBank } from "./tsv.mjs";
 
-/** Clip key, exactly as the frontend builds it. */
+export const MANIFEST_SCHEMA_VERSION = 2;
+
+/**
+ * Clip key, exactly as the frontend builds it. `text` must already be stripped
+ * of inline formatting; see `spokenText`.
+ */
 export function clipKey(locale, text) {
   return `${locale}:${text}`;
+}
+
+/**
+ * The text that is spoken, and the text the key is built from: formatting
+ * removed, so `**man**` and `man` are one clip rather than two.
+ */
+export function spokenText(text) {
+  return stripFormatting(text);
 }
 
 /** Filename stem: sha1 of the clip key, truncated to 10 hex chars. */
@@ -25,24 +40,62 @@ export async function loadManifest() {
     if (error.code === "ENOENT") {
       throw new Error(
         `No manifest at ${rel(MANIFEST_PATH)}.\n` +
-          "Build it first (pnpm --filter @flashcards/data-tools run manifest), " +
-          "or point FLASHCARDS_DATA_DIR at a data directory that has one.",
+          "Build it first (pnpm data:manifest), or point FLASHCARDS_DATA_DIR " +
+          "at a data directory that has one.",
       );
     }
     throw error;
   }
 
-  const manifest = JSON.parse(raw);
-  if (!Array.isArray(manifest?.decks)) {
+  let manifest;
+  try {
+    manifest = JSON.parse(raw);
+  } catch (error) {
+    throw new Error(
+      `${rel(MANIFEST_PATH)} is not valid JSON: ${error.message}`,
+    );
+  }
+
+  if (manifest?.schemaVersion !== MANIFEST_SCHEMA_VERSION) {
+    throw new Error(
+      `${rel(MANIFEST_PATH)} has schemaVersion ${manifest?.schemaVersion}, ` +
+        `expected ${MANIFEST_SCHEMA_VERSION}.\n` +
+        "This generator reads schema 2: deck metadata in library.json, words in " +
+        "banks/<deckId>.tsv. Regenerate the manifest with pnpm data:manifest.",
+    );
+  }
+  if (!Array.isArray(manifest.decks)) {
     throw new Error(`${rel(MANIFEST_PATH)} has no decks array.`);
   }
   return manifest;
 }
 
+/** `bank` is relative to data/: never absolute, never escaping the directory. */
+function bankPathFor(entry) {
+  const bank = entry?.bank;
+  if (typeof bank !== "string" || bank === "") {
+    const hint =
+      typeof entry?.path === "string"
+        ? ` It has a schema-1 "path" (${entry.path}) instead; regenerate the manifest.`
+        : "";
+    throw new Error(`Deck "${entry?.id}" has no "bank" path.${hint}`);
+  }
+  const segments = bank.split("/");
+  if (bank.startsWith("/") || segments.includes("..")) {
+    throw new Error(
+      `Deck "${entry.id}" has an unsafe bank path "${bank}": ` +
+        "it must be relative to data/ and must not escape it.",
+    );
+  }
+  return bank;
+}
+
 /**
- * Load every deck listed in the manifest (or just one, with `deckId`).
- * The manifest is the index of record, so decks/*.json files it does not list
- * are deliberately ignored: the validator is what flags those.
+ * Load every deck listed in the manifest (or just one, with `deckId`), reading
+ * each deck's words from its TSV bank.
+ *
+ * The manifest is the index of record, so a bank file it does not reference is
+ * deliberately ignored here: the validator is what flags orphans.
  */
 export async function loadDecks(deckId = null) {
   const manifest = await loadManifest();
@@ -57,24 +110,39 @@ export async function loadDecks(deckId = null) {
 
   const decks = [];
   for (const entry of entries) {
-    const absolute = dataPath(entry.path);
-    let deck;
+    const bank = bankPathFor(entry);
+    const absolute = dataPath(bank);
+
+    let text;
     try {
-      deck = JSON.parse(await fs.readFile(absolute, "utf8"));
+      text = await fs.readFile(absolute, "utf8");
     } catch (error) {
       throw new Error(
-        `Cannot read deck "${entry.id}" at ${rel(absolute)}: ${error.message}`,
+        error.code === "ENOENT"
+          ? `Deck "${entry.id}" points at a missing bank: ${rel(absolute)}.`
+          : `Cannot read bank for deck "${entry.id}" at ${rel(absolute)}: ${error.message}`,
       );
     }
-    decks.push(deck);
+
+    decks.push({
+      id: entry.id,
+      name: entry.name,
+      languages: entry.languages,
+      bank,
+      words: parseBank(text, rel(absolute)),
+    });
   }
   return decks;
 }
 
 /**
- * Every clip the decks need, deduplicated across decks by `${locale}:${text}`.
+ * Every clip the decks need, deduplicated across decks by
+ * `${locale}:${strippedText}`.
+ *
  * That dedup is the entire reason the audio index is shared rather than
- * per-deck: "the" in a Dutch deck and in a German deck are one clip.
+ * per-deck: "the" in a Dutch deck and in a German deck are one clip. Stripping
+ * formatting before keying extends the same idea to markup: `**de man**` and
+ * `de man` are also one clip.
  */
 export function collectRequiredClips(decks) {
   const required = new Map();
@@ -94,11 +162,22 @@ export function collectRequiredClips(decks) {
     for (const word of deck.words ?? []) {
       for (const side of ["front", "back"]) {
         const { locale, label } = deck.languages[side];
-        const text = word?.[side];
+        const raw = word?.[side];
 
-        if (typeof text !== "string" || text.trim() === "") {
+        if (typeof raw !== "string") {
           warnings.push(
             `deck ${deck.id}: word "${word?.id ?? "?"}" has no ${side} text; skipped`,
+          );
+          continue;
+        }
+
+        // Formatting is stripped before speaking *and* before keying, so the
+        // key is stable across purely cosmetic edits.
+        const text = spokenText(raw);
+        if (text.trim() === "") {
+          warnings.push(
+            `deck ${deck.id}: word "${word?.id ?? "?"}" has no ${side} text ` +
+              "left after stripping formatting; skipped",
           );
           continue;
         }

@@ -1,11 +1,22 @@
 import type { z } from "zod";
-import type { AudioIndex, Deck, DeckSummary, Manifest } from "@/types/deck";
-import { audioIndexSchema, deckSchema, manifestSchema } from "./schemas";
+import type {
+  AudioIndex,
+  Deck,
+  DeckSummary,
+  Manifest,
+  Word,
+} from "@/types/deck";
+import {
+  audioIndexSchema,
+  bankRowSchema,
+  DATA_SCHEMA_VERSION,
+  manifestSchema,
+} from "./schemas";
 
 /**
- * The one place that talks to the network. Everything fetched here is parsed
- * through a schema before it leaves this module, so the rest of the app can
- * treat `Manifest`/`Deck`/`AudioIndex` as facts.
+ * The one place that talks to the network. Everything fetched here is validated
+ * before it leaves this module, so the rest of the app can treat
+ * `Manifest`/`Deck`/`AudioIndex` as facts.
  */
 
 /**
@@ -13,7 +24,9 @@ import { audioIndexSchema, deckSchema, manifestSchema } from "./schemas";
  * `vite dev` serves and what `scripts/postbuild.mjs` copies into `dist/data`.
  */
 export const DATA_BASE_URL: string =
-  import.meta.env.VITE_DATA_BASE_URL ?? "/data";
+  // The `?.` is what keeps this module importable outside a bundler - a node
+  // script exercising the parser has no `import.meta.env` to read.
+  import.meta.env?.VITE_DATA_BASE_URL ?? "/data";
 
 /** Resolves a path relative to `data/` (as found in the manifest or audio index). */
 export function dataUrl(relativePath: string): string {
@@ -35,14 +48,27 @@ export class DataFetchError extends Error {
   }
 }
 
-/** A fetch that succeeded but returned something that is not valid data. */
+/**
+ * A fetch that succeeded but returned something that is not valid data.
+ *
+ * This is the one boundary where bad data has to be caught, and the message is
+ * the only thing a reader of a bug report will have: it always names the URL,
+ * and for line-oriented files the 1-based line number too, so a screenshot is
+ * enough to find the offending row in an editor.
+ */
 export class DataValidationError extends Error {
   readonly url: string;
+  readonly line: number | null;
 
-  constructor(url: string, detail: string) {
-    super(`Invalid data at ${url}: ${detail}`);
+  constructor(url: string, detail: string, line: number | null = null) {
+    super(
+      line === null
+        ? `Invalid data at ${url}: ${detail}`
+        : `Invalid data at ${url} line ${line}: ${detail}`,
+    );
     this.name = "DataValidationError";
     this.url = url;
+    this.line = line;
   }
 }
 
@@ -92,11 +118,247 @@ export function fetchManifest(): Promise<Manifest> {
   });
 }
 
-/** Decks are immutable at a revision, so the HTTP cache is welcome to help. */
-export function fetchDeck(summary: Pick<DeckSummary, "path">): Promise<Deck> {
-  return fetchJson(dataUrl(summary.path), deckSchema);
-}
-
 export function fetchAudioIndex(): Promise<AudioIndex> {
   return fetchJson(dataUrl("audio/index.json"), audioIndexSchema);
+}
+
+/**
+ * A deck's words come from its TSV bank. A bank at a given revision is
+ * immutable, so the HTTP cache is welcome to help here.
+ */
+export async function fetchDeck(summary: DeckSummary): Promise<Deck> {
+  const url = dataUrl(summary.bank);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new DataFetchError(url, response.status, response.statusText);
+  }
+  return parseBank(await response.text(), summary);
+}
+
+/** Columns every bank must declare. Anything else it declares is optional. */
+const REQUIRED_COLUMNS = ["id", "front", "back"] as const;
+
+/** Characters that can never appear inside a field. */
+const FORBIDDEN_FIELD_CHARS = /[\t\n\r]/;
+
+const isBlank = (line: string) => line.trim() === "";
+const isComment = (line: string) => line.trimStart().startsWith("#");
+
+/** `tags` is comma-separated inside its one cell; an empty cell means no tags. */
+function parseTagCell(cell: string): string[] {
+  return cell
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag !== "");
+}
+
+/**
+ * Parses a bank's text into a `Deck`, combining it with the deck's metadata from
+ * the manifest.
+ *
+ * The format makes quoting impossible to get wrong: no field may contain a tab
+ * or a newline, so a data line is exactly `split("\t")` and there is no quoted
+ * field mode. The rules below are the contract (`docs/DATA_CONTRACT.md`), shared
+ * with `tools/data-tools` and `tools/audio-gen`, each of which carries its own
+ * parser so that neither workspace has to depend on the other:
+ *
+ * - Columns are addressed by header **name**, so reordering columns changes
+ *   nothing and unknown columns are ignored - which is what lets a column be
+ *   added without a schema bump.
+ * - The header is the first line that is neither blank nor a comment. Blank
+ *   means no non-whitespace character; a comment's first non-whitespace
+ *   character is `#`.
+ * - Header cells are trimmed and must be unique. Field values are **not**
+ *   trimmed: a trailing space in `front` is data, and eating it would change the
+ *   audio key. Individual tags are trimmed, since `a, b` is how a list is
+ *   written.
+ * - A row may omit trailing **optional** columns: `ik⇥ik⇥I` means no tags, just
+ *   as `ik⇥ik⇥I⇥` does. Omitting a required column is an error, and so is a row
+ *   with more fields than the header - that is a stray tab, which silently
+ *   shifts every column after it.
+ *
+ * Line numbers in errors count every physical line, including the blanks and
+ * comments that were skipped, so they match what an editor shows.
+ */
+export function parseBank(text: string, summary: DeckSummary): Deck {
+  const url = dataUrl(summary.bank);
+  const lines = text.split(/\r\n|\n/);
+
+  let columns: string[] | null = null;
+  const words: Word[] = [];
+  /** word id -> the line it was first seen on, for the duplicate check. */
+  const seenIds = new Map<string, number>();
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const lineNumber = index + 1;
+    if (isBlank(line) || isComment(line)) continue;
+
+    const cells = line.split("\t");
+
+    if (columns === null) {
+      columns = readHeader(cells, url, lineNumber);
+      continue;
+    }
+
+    const values = readRow(cells, columns, url, lineNumber);
+    const row = bankRowSchema.safeParse({
+      id: values.id,
+      front: values.front,
+      back: values.back,
+      tags: parseTagCell(values.tags ?? ""),
+    });
+    if (!row.success) {
+      throw new DataValidationError(
+        url,
+        summarizeIssues(row.error),
+        lineNumber,
+      );
+    }
+
+    const firstSeen = seenIds.get(row.data.id);
+    if (firstSeen !== undefined) {
+      throw new DataValidationError(
+        url,
+        `duplicate word id "${row.data.id}", first seen on line ${firstSeen}. ` +
+          "Ids are what a learner's progress is stored under, so two rows " +
+          "sharing one id would share one score",
+        lineNumber,
+      );
+    }
+    seenIds.set(row.data.id, lineNumber);
+
+    words.push(row.data);
+  }
+
+  if (columns === null) {
+    throw new DataValidationError(
+      url,
+      "no header row: every line is blank or a comment",
+    );
+  }
+
+  return {
+    schemaVersion: DATA_SCHEMA_VERSION,
+    id: summary.id,
+    name: summary.name,
+    color: summary.color,
+    revision: summary.revision,
+    languages: summary.languages,
+    words,
+  };
+}
+
+/**
+ * Validates the header and returns the column names in file order. A wrong body
+ * altogether (a host answering 200 with an error page, say) lands here, which is
+ * why the message reports what it did find.
+ */
+function readHeader(
+  cells: string[],
+  url: string,
+  lineNumber: number,
+): string[] {
+  const columns = cells.map((cell) => cell.trim());
+  // A trailing tab on the header would otherwise declare a nameless column.
+  while (columns.length > 0 && columns.at(-1) === "") columns.pop();
+
+  if (columns.length === 0) {
+    throw new DataValidationError(url, "header row is empty", lineNumber);
+  }
+  if (columns.includes("")) {
+    throw new DataValidationError(
+      url,
+      "header has an empty column name",
+      lineNumber,
+    );
+  }
+
+  const duplicate = columns.find((name, at) => columns.indexOf(name) !== at);
+  if (duplicate !== undefined) {
+    throw new DataValidationError(
+      url,
+      `header declares column "${duplicate}" more than once, which makes ` +
+        "addressing columns by name ambiguous",
+      lineNumber,
+    );
+  }
+
+  const missing = REQUIRED_COLUMNS.filter((name) => !columns.includes(name));
+  if (missing.length > 0) {
+    throw new DataValidationError(
+      url,
+      `header is missing required column(s) ${missing.join(", ")}; ` +
+        `it declares ${columns.join(", ")}`,
+      lineNumber,
+    );
+  }
+
+  return columns;
+}
+
+/**
+ * One data row, as a map from column name to raw (untrimmed) value.
+ *
+ * The two length mismatches are not symmetric, which is the whole point:
+ *
+ * - **Too few fields** is fine as long as every column that fell off the end is
+ *   optional; the missing cells read as empty. Forgetting the final tab on a
+ *   word with no tags is the likeliest hand-edit slip there is, and it cannot
+ *   mean anything other than "no tags". Hard-failing a whole deck over it would
+ *   defeat the reason this format is a TSV: appending a line has to be safe for a
+ *   human or an AI to do.
+ * - **Too many fields** is an error, because that is a stray tab, and a stray tab
+ *   shifts every column after it. The data would then not be saying what it
+ *   looks like it says, which is exactly the failure that must never pass.
+ */
+function readRow(
+  cells: string[],
+  columns: string[],
+  url: string,
+  lineNumber: number,
+): Record<string, string> {
+  const fields = [...cells];
+  // Trailing tabs for empty last columns are fine.
+  while (fields.length > columns.length && fields.at(-1) === "") fields.pop();
+
+  if (fields.length > columns.length) {
+    throw new DataValidationError(
+      url,
+      `has ${fields.length} fields but the header declares ${columns.length}, ` +
+        "so a field contains a tab - which no field may, and there is no " +
+        "escape syntax",
+      lineNumber,
+    );
+  }
+
+  const omitted = columns.slice(fields.length);
+  const omittedRequired = omitted.filter((name) =>
+    REQUIRED_COLUMNS.includes(name as (typeof REQUIRED_COLUMNS)[number]),
+  );
+  if (omittedRequired.length > 0) {
+    throw new DataValidationError(
+      url,
+      `has ${fields.length} field(s) but the header declares ` +
+        `${columns.length}, omitting required column(s) ` +
+        omittedRequired.join(", "),
+      lineNumber,
+    );
+  }
+
+  const values: Record<string, string> = {};
+  for (let at = 0; at < columns.length; at += 1) {
+    const name = columns[at];
+    // Omitted trailing optional column: read as empty, per the contract.
+    const value = at < fields.length ? fields[at] : "";
+    if (FORBIDDEN_FIELD_CHARS.test(value)) {
+      throw new DataValidationError(
+        url,
+        `field "${name}" contains a tab, newline or carriage return`,
+        lineNumber,
+      );
+    }
+    values[name] = value;
+  }
+  return values;
 }

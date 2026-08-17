@@ -1,7 +1,9 @@
 import { Volume2Icon } from "lucide-react";
 
+import { RichText } from "@/components/rich-text";
 import { Button } from "@/components/ui/button";
 import { useSpeak } from "@/lib/audio/use-speech";
+import { stripFormatting } from "@/lib/markup";
 import { cn } from "@/lib/utils";
 import type { LanguageInfo } from "@/types/deck";
 
@@ -71,6 +73,11 @@ function CardFace({
   onFlip,
   onSpeak,
 }: CardFaceProps) {
+  // The face renders `text` as markup; anything a screen reader or the speech
+  // tier consumes gets the plain-text projection instead, so nobody hears
+  // asterisks.
+  const plain = stripFormatting(text);
+
   return (
     // `inert` keeps the face that is turned away out of the tab order and out
     // of the accessibility tree.
@@ -81,24 +88,28 @@ function CardFace({
         className,
       )}
     >
+      {/* The label carries the stripped text because it overrides the button's
+          contents as the accessible name - without it the card face would be
+          silent to a screen reader, and with the raw text it would spell out
+          the delimiters. */}
       <button
         type="button"
         onClick={onFlip}
-        aria-label={`Show the ${otherSideLabel} side`}
+        aria-label={`${language.label}: ${plain}. Show the ${otherSideLabel} side`}
         className="flex size-full cursor-pointer flex-col items-center justify-center gap-3 p-6 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
       >
         <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {language.label}
         </span>
         <span className="text-center text-4xl font-semibold break-words text-balance sm:text-5xl">
-          {text}
+          <RichText text={text} />
         </span>
       </button>
       {/* A missing clip makes useSpeak a no-op, so this never renders disabled. */}
       <Button
         variant="ghost"
         size="icon-lg"
-        aria-label={`Pronounce ${text}`}
+        aria-label={`Pronounce ${plain}`}
         onClick={() => onSpeak(text, language.locale)}
         className="absolute right-2 bottom-2 text-muted-foreground"
       >
