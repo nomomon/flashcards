@@ -9,10 +9,9 @@
 // output, which is what lets validate.mjs (and CI) assert that the committed
 // manifest is exactly what the current inputs produce.
 
-import crypto from "node:crypto";
 import { serializeJson, writeJsonIfChanged } from "./json.mjs";
 import {
-  collectTags,
+  bankRelativePath,
   loadBank,
   loadLibrary,
   SCHEMA_VERSION,
@@ -20,28 +19,17 @@ import {
 import { MANIFEST_PATH, rel } from "./paths.mjs";
 
 /**
- * Top-level revision: sha256 over each deck's `id` and `revision`, in id order,
- * as `${id}:${revision}\n` lines. Deck *order* in library.json therefore does
- * not affect it — only which decks exist and what they contain.
- * @param {Array<{id: string, revision: string}>} decks
- */
-export function libraryRevision(decks) {
-  const payload = [...decks]
-    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-    .map((deck) => `${deck.id}:${deck.revision}\n`)
-    .join("");
-  return crypto
-    .createHash("sha256")
-    .update(payload, "utf8")
-    .digest("hex")
-    .slice(0, 12);
-}
-
-/**
  * Builds the manifest object from the authored files.
  *
- * Deck entries keep library.json's authored order (that is the order the app
- * lists decks in); only the revision hash is order-independent.
+ * Deck entries keep library.json's authored order, which is also the order the
+ * app lists decks in.
+ *
+ * Every field here has to earn its place: the manifest exists so the overview
+ * grid can render without fetching a single bank, so a field belongs only if the
+ * grid needs it before a deck is loaded. `wordCount` qualifies (the grid shows a
+ * count and a progress percentage per deck); a denormalized `tags` list did not,
+ * an aggregate top-level revision had no consumer at all, and a `bank` path was
+ * just the id spelled twice.
  *
  * @returns {{manifest: object, banks: Array<ReturnType<typeof loadBank>>}}
  */
@@ -53,16 +41,13 @@ export function buildManifest() {
 
   const banks = [];
   const decks = library.decks.map((deck) => {
-    if (typeof deck?.bank !== "string" || deck.bank === "") {
-      throw new Error(
-        `data/library.json: deck ${JSON.stringify(deck?.id)} has no bank path`,
-      );
-    }
     let bank;
     try {
-      bank = loadBank(deck.bank);
+      bank = loadBank(deck?.id);
     } catch (error) {
-      throw new Error(`cannot read data/${deck.bank}: ${error.message}`);
+      throw new Error(
+        `cannot read data/${bankRelativePath(deck?.id)}: ${error.message}`,
+      );
     }
     banks.push(bank);
 
@@ -70,25 +55,19 @@ export function buildManifest() {
       id: deck.id,
       name: deck.name,
       color: deck.color,
-      languages: deck.languages,
       // `icon` is optional. Spread it in so an absent icon produces NO key at
       // all: invariant 6 compares bytes, and `"icon": null` is not the same file
       // as no icon. Its validity is the frontend's business — an unknown name
       // falls back to the default icon rather than failing the build.
       ...(deck.icon === undefined ? {} : { icon: deck.icon }),
+      languages: deck.languages,
       wordCount: bank.words.length,
-      tags: collectTags(bank.words),
       revision: bank.revision,
-      bank: deck.bank,
     };
   });
 
   return {
-    manifest: {
-      schemaVersion: SCHEMA_VERSION,
-      revision: libraryRevision(decks),
-      decks,
-    },
+    manifest: { schemaVersion: SCHEMA_VERSION, decks },
     banks,
   };
 }
@@ -109,11 +88,10 @@ function main() {
   console.log(`${changed ? "wrote" : "unchanged"}: ${rel(MANIFEST_PATH)}`);
   for (const entry of manifest.decks) {
     console.log(
-      `  ${entry.id}: ${entry.wordCount} words, ${entry.tags.length} tags, ` +
-        `revision ${entry.revision} (${entry.bank})`,
+      `  ${entry.id}: ${entry.wordCount} words, revision ${entry.revision}` +
+        ` (${bankRelativePath(entry.id)})`,
     );
   }
-  console.log(`manifest revision: ${manifest.revision}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

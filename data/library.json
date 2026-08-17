@@ -14,13 +14,13 @@
           "label": "English",
           "locale": "en-US"
         }
-      },
-      "bank": "banks/dutch-1.tsv"
+      }
     },
     {
       "id": "dutch-4",
       "name": "Hoofdstuk 4: Reizen",
       "color": "#0E7490",
+      "icon": "plane",
       "languages": {
         "front": {
           "label": "Dutch",
@@ -30,9 +30,7 @@
           "label": "English",
           "locale": "en-US"
         }
-      },
-      "icon": "plane",
-      "bank": "banks/dutch-4.tsv"
+      }
     }
   ]
 }

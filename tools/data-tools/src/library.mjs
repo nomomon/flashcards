@@ -27,22 +27,27 @@ export function loadLibrary() {
 }
 
 /**
- * The one legal `bank` value for a deck id. The contract pins it to exactly
- * `banks/<id>.tsv`: the path is redundant with the id and is kept only so the
- * file a deck refers to is visible where the deck is declared. Pinning it is
- * what makes the orphan sweep over banks/ total — a deck cannot point somewhere
- * the sweep does not look.
+ * Where a deck's words live, relative to data/. This is DERIVED from the id and
+ * is the only place the convention is written down.
+ *
+ * There is no authored `bank` field. A path pinned to exactly this value carried
+ * no information — it was `id` spelled twice, a field that could only ever be
+ * right or wrong and never informative. Deriving it also makes the orphan sweep
+ * over banks/ total: a deck cannot point somewhere the sweep does not look.
  */
-export function expectedBank(id) {
+export function bankRelativePath(id) {
   return `banks/${id}.tsv`;
 }
 
-/** Absolute path of a `bank` value from library.json (relative to data/). */
-export function bankPath(bank) {
-  return path.join(DATA_DIR, bank);
+/** Absolute path of a deck's bank file. */
+export function bankAbsolutePath(id) {
+  return path.join(DATA_DIR, bankRelativePath(id));
 }
 
-/** True when a `bank` value is safely relative to data/. */
+/**
+ * True when a path from a generated file is safely relative to data/. Used for
+ * audio clip paths, which are the only paths still written into a data file.
+ */
 export function isSafeRelativePath(value) {
   return (
     typeof value === "string" &&
@@ -63,16 +68,17 @@ export function listBankFiles() {
 }
 
 /**
- * Reads one bank file.
+ * Reads one deck's bank file, located from its id.
  *
  * `revision` hashes the file's exact bytes, so any edit — including whitespace
  * the parser ignores — changes it. That is intentional: the revision is a cache
  * key, and a cheap false invalidation beats a missed one.
  *
- * @param {string} bank path relative to data/, e.g. "banks/dutch-1.tsv"
+ * @param {string} id deck id, e.g. "dutch-1"
  */
-export function loadBank(bank) {
-  const file = bankPath(bank);
+export function loadBank(id) {
+  const bank = bankRelativePath(id);
+  const file = bankAbsolutePath(id);
   const bytes = fs.readFileSync(file);
   const text = bytes.toString("utf8");
   const { columns, rows, problems } = parseTsv(text, {
@@ -89,6 +95,7 @@ export function loadBank(bank) {
   }));
 
   return {
+    id,
     bank,
     file,
     bytes,
@@ -98,13 +105,4 @@ export function loadBank(bank) {
     problems,
     revision: revisionHash(bytes),
   };
-}
-
-/** Sorted, de-duplicated tags across a bank's words. */
-export function collectTags(words) {
-  const tags = new Set();
-  for (const word of words) {
-    for (const tag of word.tags) tags.add(tag);
-  }
-  return [...tags].sort();
 }

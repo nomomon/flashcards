@@ -46,12 +46,11 @@ dev at `http://localhost:3000/data/...`. The frontend resolves the base from
       "id": "dutch-1",
       "name": "Dutch",
       "color": "#FF4F00",
+      "icon": "languages",
       "languages": {
         "front": { "label": "Dutch", "locale": "nl-NL" },
         "back": { "label": "English", "locale": "en-US" }
-      },
-      "icon": "languages",
-      "bank": "banks/dutch-1.tsv"
+      }
     }
   ]
 }
@@ -65,13 +64,12 @@ dev at `http://localhost:3000/data/...`. The frontend resolves the base from
   an unrecognized name renders the fallback icon, so a typo costs a deck its icon
   rather than failing validation or breaking a tile. Omit it to get the default.
 - `locale` — BCP-47. Drives text-to-speech voice selection, so it must be real.
-- `bank` — **must be exactly `banks/<id>.tsv`**. Relative to `data/`, never
-  absolute, never containing `..`. The path is technically redundant with `id`,
-  and it is kept only so the file a deck refers to is visible where the deck is
-  declared. Allowing banks to live elsewhere would break the orphan sweep in
-  invariant 1, which scans `banks/`.
 
 No `revision`, no `wordCount`, no `tags`: all three are derived.
+
+There is also no `bank` path field. A deck's words live at `banks/<id>.tsv`,
+derived from `id` wherever the path is needed. An explicit field pinned to that
+exact value carried no information and could only ever be wrong.
 
 ## `banks/<deckId>.tsv` (authored)
 
@@ -140,6 +138,9 @@ something derived at load time, this is visible in review, which is the point.
 - `\*`, `\_` and `\\` are literal escapes.
 - **An unbalanced or unrecognized delimiter renders as literal text, never an
   error.** Data must not be able to break a card.
+- There is no HTML, no links, no code spans, no block-level anything. Markup is
+  parsed into React elements and never passed to `innerHTML`, so there is no
+  injection surface even though a workflow can write these files.
 
 Because three separate implementations must agree, "it degrades gracefully" is
 not a precise enough instruction. The exact behaviour, verified identical across
@@ -167,9 +168,6 @@ all three:
 
 There is deliberately no bold-italic shorthand. To get both, nest explicitly:
 `**a *b* c**`.
-- There is no HTML, no links, no code spans, no block-level anything. Markup is
-  parsed into React elements and never passed to `innerHTML`, so there is no
-  injection surface even though a workflow can write these files.
 
 **Formatting is stripped before text-to-speech, and the stripped text is what
 audio is keyed on.** So italicising a word does not orphan its clip and does not
@@ -184,7 +182,6 @@ Regenerate with `pnpm data:manifest`. Fetched on every app start
 ```json
 {
   "schemaVersion": 2,
-  "revision": "9f2c1a7b4e05",
   "decks": [
     {
       "id": "dutch-1",
@@ -195,25 +192,36 @@ Regenerate with `pnpm data:manifest`. Fetched on every app start
         "back": { "label": "English", "locale": "en-US" }
       },
       "wordCount": 127,
-      "tags": ["introduction", "l1", "politeness"],
-      "revision": "3ab8f10c92d4",
-      "bank": "banks/dutch-1.tsv"
+      "revision": "3ab8f10c92d4"
     }
   ]
 }
 ```
 
-- `decks[].revision` — first 12 hex of `sha256` of the bank file's **exact
-  bytes**. This is the deck cache key: edit a bank, the hash changes, the
-  frontend's query key changes, the deck refetches, the old entry is collected.
-  Nobody has to remember to bump anything.
-- `revision` — first 12 hex of `sha256` over `` `${id}:${revision}\n` `` for each
-  deck, concatenated in ascending `id` order. Changes when any deck changes. The
-  exact input format is specified because it is the one value another tool might
-  independently recompute, and "hash the ids and revisions" is not reproducible
-  without it.
-- `wordCount`, `tags` — derived from the bank. `tags` is sorted and deduplicated.
+- `revision` — first 12 hex of `sha256` of the bank file's **exact bytes**. This
+  is the deck cache key: edit a bank, the hash changes, the frontend's query key
+  changes, the deck refetches, the old entry is collected. Nobody has to remember
+  to bump anything.
+- `wordCount` — derived from the bank.
 - Everything else is copied verbatim from `library.json`.
+
+Nothing else belongs here, and two fields were removed once that test was applied
+honestly. The manifest's job is to let the **overview** render without fetching a
+single bank, so a field earns its place only if the grid needs it before a deck is
+loaded:
+
+- A denormalized `tags` list was dropped. The only screen that filters by tag is
+  a deck's own page, which fetches that deck's bank anyway and can count tags from
+  the words in hand.
+- An aggregate top-level `revision` was dropped. It had no consumer: freshness is
+  decided per deck, so an all-decks hash was a value nothing ever read.
+- A `bank` path was dropped, for the reason given under `library.json`.
+
+`wordCount` is derived and stays, which is not a contradiction: being derived is
+not what disqualifies a field, being derived *and unneeded* is. The grid shows a
+word count and a progress percentage for every deck, and recomputing those would
+mean fetching every bank on the home screen — exactly what this file exists to
+avoid.
 
 **The manifest is a pure function of the authored files.** There is no
 `generatedAt` and no timestamp anywhere, so regenerating without changing content
@@ -252,9 +260,10 @@ display order; only the hash input is sorted.
 
 ## Invariants the validator enforces
 
-1. Every `library.decks[]` entry has a bank file at its `bank` path, and every
-   file in `banks/` is referenced by exactly one entry — no orphans, no dangles.
-2. Deck `id` equals the bank's filename stem.
+1. Every `library.decks[]` entry has a bank file at `banks/<id>.tsv`, and every
+   file in `banks/` is claimed by exactly one entry — no orphans, no dangles.
+   With the path derived from the id, this is now one rule rather than two.
+2. Deck ids are unique within `library.json`.
 3. Every bank has the required columns; no field contains a tab or newline; no
    row omits a required column or carries more fields than the header. Omitting
    trailing optional columns is allowed.

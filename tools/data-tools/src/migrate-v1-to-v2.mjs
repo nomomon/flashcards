@@ -32,10 +32,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { buildManifest } from "./build-manifest.mjs";
 import { readJson, writeJsonIfChanged } from "./json.mjs";
-import { BANK_COLUMNS, SCHEMA_VERSION } from "./library.mjs";
+import { BANK_COLUMNS, bankAbsolutePath, SCHEMA_VERSION } from "./library.mjs";
 import {
   AUDIO_INDEX_PATH,
-  BANKS_DIR,
   LEGACY_DECKS_DIR,
   LIBRARY_PATH,
   MANIFEST_PATH,
@@ -97,7 +96,6 @@ export function convertDeck(legacy) {
         front: normalizeLanguage(legacy.languages?.front, "front", id),
         back: normalizeLanguage(legacy.languages?.back, "back", id),
       },
-      bank: `banks/${id}.tsv`,
     },
     bankRows,
   };
@@ -140,7 +138,7 @@ function main(argv) {
     const { libraryEntry, bankRows } = convertDeck(readJson(file));
     libraryEntries.push(libraryEntry);
 
-    const bankFile = path.join(BANKS_DIR, `${libraryEntry.id}.tsv`);
+    const bankFile = bankAbsolutePath(libraryEntry.id);
     const tsv = serializeTsv(bankRows, BANK_COLUMNS);
     const changed = writeIfChanged(bankFile, tsv, dryRun);
     console.log(

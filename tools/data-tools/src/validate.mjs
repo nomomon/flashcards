@@ -17,8 +17,8 @@ import path from "node:path";
 import { buildManifest, serializeManifest } from "./build-manifest.mjs";
 import { readJson } from "./json.mjs";
 import {
-  collectTags,
-  expectedBank,
+  bankAbsolutePath,
+  bankRelativePath,
   isSafeRelativePath,
   listBankFiles,
   loadBank,
@@ -97,8 +97,6 @@ try {
 
 /** @type {Array<{id: string, bank: string, entry: object}>} */
 const entries = [];
-/** Banks a deck meant to reference but named wrongly; already reported. */
-const misreferenced = new Set();
 /** Locales any deck actually uses, for invariant 7. */
 const usedLocales = new Set();
 
@@ -127,9 +125,13 @@ if (library) {
       if (typeof entry?.id !== "string" || entry.id === "") {
         fail(0, `${at}: id must be a non-empty string`);
       } else if (seenIds.has(entry.id)) {
+        // Invariant 2. With the bank path derived from the id, a duplicate id is
+        // also two decks claiming one bank file, so this is the only place that
+        // collision needs reporting.
         fail(
-          0,
-          `${libraryWhere}: duplicate deck id "${entry.id}" at decks[${seenIds.get(entry.id)}] and decks[${index}]`,
+          2,
+          `${libraryWhere}: duplicate deck id "${entry.id}" at decks[${seenIds.get(entry.id)}] and decks[${index}]` +
+            " — ids must be unique, and two decks cannot share one bank file",
         );
       } else {
         seenIds.set(entry.id, index);
@@ -157,38 +159,24 @@ if (library) {
           );
         }
       }
+      // Derived fields must not be authored. `bank` is here because it used to
+      // be authored: it is now derived from `id`, so a leftover line is stale
+      // rather than wrong, and the fix is simply to delete it.
       for (const key of ["revision", "wordCount", "tags"]) {
         if (entry && key in entry) {
           fail(0, `${at}: "${key}" is derived and must not be authored here`);
         }
       }
+      if (entry && "bank" in entry) {
+        fail(
+          0,
+          `${at}: "bank" is no longer a field — a deck's words are always at ` +
+            `${bankRelativePath(entry.id)}, derived from its id. Delete the line.`,
+        );
+      }
 
-      if (!isSafeRelativePath(entry?.bank)) {
-        fail(
-          1,
-          `${at}: bank ${JSON.stringify(entry?.bank)} must be a path relative to data/, never absolute and never containing ".."`,
-        );
-        return;
-      }
-      // Invariant 1/2: the bank path is pinned to exactly `banks/<id>.tsv`, so
-      // a deck can never point outside the directory the orphan sweep below
-      // walks. This subsumes the old "id equals filename stem" comparison.
-      if (
-        typeof entry.id === "string" &&
-        entry.bank !== expectedBank(entry.id)
-      ) {
-        fail(
-          2,
-          `${at}: bank ${JSON.stringify(entry.bank)} must be exactly "${expectedBank(entry.id)}"`,
-        );
-        // Count the bank this deck *should* point at as referenced, so the
-        // orphan sweep does not report it as a second symptom. One
-        // misconfiguration should produce one message, naming the fix.
-        misreferenced.add(expectedBank(entry.id));
-        return;
-      }
-      if (typeof entry.id === "string") {
-        entries.push({ id: entry.id, bank: entry.bank, entry });
+      if (typeof entry?.id === "string" && entry.id !== "") {
+        entries.push({ id: entry.id, bank: bankRelativePath(entry.id), entry });
       }
     });
   }
@@ -198,28 +186,24 @@ if (library) {
 
 /** @type {Map<string, ReturnType<typeof loadBank>>} */
 const loadedBanks = new Map();
-/** bank path (relative to data/) -> deck ids referencing it */
-const referencedBanks = new Map();
+/** Bank paths (relative to data/) claimed by a deck, for the orphan sweep. */
+const claimedBanks = new Set();
 
 for (const { id, bank } of entries) {
-  referencedBanks.set(bank, [...(referencedBanks.get(bank) ?? []), id]);
+  claimedBanks.add(bank);
 
-  const absolute = path.join(DATA_DIR, bank);
-  // Invariant 1: the referenced bank exists.
-  if (!fs.existsSync(absolute)) {
+  // Invariant 1: the deck's bank exists at the derived path.
+  if (!fs.existsSync(bankAbsolutePath(id))) {
     fail(
       1,
-      `${libraryWhere}: deck "${id}" points at data/${bank}, which does not exist`,
+      `${libraryWhere}: deck "${id}" has no bank file — expected data/${bank}`,
     );
     continue;
   }
 
-  // Invariant 2 needs no separate stem comparison: `bank` was already pinned to
-  // `banks/${id}.tsv` above, which makes id == filename stem by construction.
-
   let loaded;
   try {
-    loaded = loadBank(bank);
+    loaded = loadBank(id);
   } catch (error) {
     fail(0, `data/${bank}: ${error.message}`);
     continue;
@@ -303,24 +287,16 @@ for (const { id, bank } of entries) {
   }
 }
 
-// Invariant 1, other direction: no bank file without exactly one deck entry.
+// Invariant 1, other direction: no bank file that no deck claims. "Claimed by
+// exactly one entry" needs no separate count now that the path is derived — two
+// entries can only claim one file by sharing an id, which invariant 2 reports.
 for (const name of listBankFiles()) {
   const bankRelative = `banks/${name}`;
-  const referencing = referencedBanks.get(bankRelative) ?? [];
-  if (referencing.length === 0 && misreferenced.has(bankRelative)) {
-    continue; // Already reported as a wrongly named `bank` path.
-  }
-  if (referencing.length === 0) {
-    fail(
-      1,
-      `${rel(path.join(BANKS_DIR, name))}: orphan bank — no deck in ${libraryWhere} references it`,
-    );
-  } else if (referencing.length > 1) {
-    fail(
-      1,
-      `${rel(path.join(BANKS_DIR, name))}: referenced by ${referencing.length} decks (${referencing.join(", ")}); it must be exactly one`,
-    );
-  }
+  if (claimedBanks.has(bankRelative)) continue;
+  fail(
+    1,
+    `${rel(path.join(BANKS_DIR, name))}: orphan bank — no deck in ${libraryWhere} has id "${path.basename(name, ".tsv")}"`,
+  );
 }
 
 // --- manifest.json (invariant 6) -------------------------------------------
@@ -364,12 +340,6 @@ if (committedManifest !== null) {
           `${manifestWhere}: schemaVersion ${JSON.stringify(parsed.schemaVersion)} != ${manifest.schemaVersion}`,
         );
       }
-      if (parsed.revision !== manifest.revision) {
-        fail(
-          6,
-          `${manifestWhere}: revision ${JSON.stringify(parsed.revision)} != expected "${manifest.revision}"`,
-        );
-      }
       const committedById = new Map(
         (Array.isArray(parsed.decks) ? parsed.decks : []).map((deck) => [
           deck?.id,
@@ -390,12 +360,22 @@ if (committedManifest !== null) {
             );
           }
         }
-        if (JSON.stringify(found.tags) !== JSON.stringify(deck.tags)) {
-          fail(
-            6,
-            `${manifestWhere}: deck "${deck.id}" tags ${JSON.stringify(found.tags)} != expected ${JSON.stringify(deck.tags)}`,
-          );
+        // Fields that no longer belong, called out by name: a stale manifest
+        // carrying them is otherwise only reported as an opaque byte mismatch.
+        for (const key of ["tags", "bank"]) {
+          if (key in found) {
+            fail(
+              6,
+              `${manifestWhere}: deck "${deck.id}" still carries "${key}", which is no longer part of the manifest`,
+            );
+          }
         }
+      }
+      if ("revision" in parsed) {
+        fail(
+          6,
+          `${manifestWhere}: still carries a top-level "revision", which is no longer part of the manifest (freshness is per deck)`,
+        );
       }
       for (const id of committedById.keys()) {
         if (!manifest.decks.some((deck) => deck.id === id)) {
@@ -524,8 +504,8 @@ if (audioIndex) {
 
 const INVARIANT_TITLES = {
   0: "Structure / field types",
-  1: "1. library.decks[] and banks/ match one-to-one",
-  2: "2. Deck id == bank filename stem",
+  1: "1. Every deck has a bank at banks/<id>.tsv, and no bank is unclaimed",
+  2: "2. Deck ids are unique within library.json",
   3: "3. Bank columns, no tabs/newlines in fields, no short rows",
   4: "4. Word ids unique within a bank and slug-shaped",
   5: "5. Inline formatting balanced (warning only)",
@@ -567,14 +547,13 @@ for (const { id } of entries) {
   if (!bank) continue;
   const entry = manifest?.decks.find((deck) => deck.id === id);
   console.log(
-    `  ${id}: ${bank.words.length} words, ${collectTags(bank.words).length} tags, ` +
-      `revision ${bank.revision} (${bank.bank})`,
+    `  ${id}: ${bank.words.length} words, revision ${bank.revision} (${bank.bank})`,
   );
   if (entry) {
     console.log(
-      `    languages ${entry.languages?.front?.locale} -> ${entry.languages?.back?.locale}`,
+      `    languages ${entry.languages?.front?.locale} -> ${entry.languages?.back?.locale}` +
+        `${entry.icon ? `, icon ${entry.icon}` : ""}`,
     );
   }
 }
-if (manifest) console.log(`  manifest revision: ${manifest.revision}`);
 console.log("  all 7 contract invariants satisfied");

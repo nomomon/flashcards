@@ -121,9 +121,7 @@ const deckSummarySchema = z.object({
   color: hexColor,
   languages: deckLanguagesSchema,
   wordCount: z.number().int().nonnegative(),
-  tags: z.array(nonEmptyText),
   revision: contentRevision,
-  bank: relativeDataPath,
   // Deliberately just a string: the set of renderable icons is a frontend
   // concern, and an unknown name degrades to the fallback icon rather than
   // rejecting the whole manifest.
@@ -132,7 +130,6 @@ const deckSummarySchema = z.object({
 
 export const manifestSchema = z.object({
   schemaVersion,
-  revision: contentRevision,
   decks: z.array(deckSummarySchema),
 });
 

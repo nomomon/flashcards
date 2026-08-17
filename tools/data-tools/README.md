@@ -38,8 +38,8 @@ node tools/data-tools/src/validate.mjs
 ## When to run them
 
 - **After editing a bank or `library.json`** — `manifest`, then `validate`. The
-  manifest derives `wordCount`, `tags` and the content-hash `revision`, so an
-  edited bank with a stale manifest fails invariant 6.
+  manifest derives `wordCount` and the content-hash `revision`, so an edited
+  bank with a stale manifest fails invariant 6.
 - **In CI, on every push** — `validate` only. It never writes. It prints *every*
   problem, grouped by invariant, so one run tells you everything.
 
@@ -55,7 +55,7 @@ its bank file's bytes, so editing the bank changes the cache key automatically.
 | `tsv.mjs`            | **Reference** TSV parser/serializer for word banks.                         |
 | `markup.mjs`         | **Reference** inline-markup parser and `stripFormatting`.                    |
 | `slug.mjs`           | Word-id rules.                                                              |
-| `library.mjs`        | Loads `library.json` and banks; revision hashing; tag collection.            |
+| `library.mjs`        | Loads `library.json` and banks; derives bank paths; revision hashing.        |
 | `build-manifest.mjs` | Generates `manifest.json`.                                                  |
 | `validate.mjs`       | Enforces the seven invariants.                                              |
 | `migrate-v1-to-v2.mjs` | The schema 1 -> 2 migration, kept for auditability.                        |
@@ -91,11 +91,16 @@ line stopped short of.
 
 ## `library.json` fields
 
-`id`, `name`, `color` (`#RRGGBB`), `languages.{front,back}.{label,locale}` and
-`bank` are required. `bank` must be **exactly** `banks/<id>.tsv` — it is
-redundant with `id` and kept only so the file a deck refers to is visible where
-the deck is declared. Pinning it is what makes the orphan sweep over `banks/`
-total.
+`id`, `name`, `color` (`#RRGGBB`) and `languages.{front,back}.{label,locale}` are
+required. That is the whole list.
+
+There is **no `bank` path field**. A deck's words are always at `banks/<id>.tsv`,
+derived from the id by `bankRelativePath()` in `library.mjs`, which is the only
+place that convention is written down. An explicit field pinned to that exact
+value carried no information — it was `id` spelled twice, a field that could only
+ever be right or wrong and never informative. Deriving it also makes the orphan
+sweep over `banks/` total: a deck cannot point somewhere the sweep does not look.
+A leftover `bank` line is reported as an error telling you to delete it.
 
 `icon` is **optional**: a name from the frontend's curated set
 (`frontend/src/features/decks/deck-icon.tsx`), copied through to the manifest
@@ -147,15 +152,31 @@ slug rather than demanding the numbering a fresh pass would produce, so
 reordering or inserting words never forces id churn. Because `id` is now an
 explicit column, any change to one is visible in review.
 
-## Revisions
+## What the manifest carries, and why
 
-- `decks[].revision` — first 12 hex of `sha256` of the bank file's exact bytes.
-  Whitespace the parser ignores still changes it; a cheap false cache
-  invalidation beats a missed one.
-- `revision` (top level) — first 12 hex of `sha256` over `${id}:${revision}\n`
-  per deck, sorted by id. Deck order in `library.json` therefore does not affect
-  it, while any content change does.
+A manifest entry is `{id, name, color, icon?, languages, wordCount, revision}`,
+and the file is `{schemaVersion, decks}`. Nothing else.
+
+The manifest exists so the overview grid renders **without fetching a single
+bank**, so a field earns its place only if the grid needs it before a deck is
+loaded. `wordCount` qualifies: the grid shows a word count and a progress
+percentage per deck, and recomputing those would mean fetching every bank on the
+home screen. Being derived is not what disqualifies a field — being derived *and
+unneeded* is. Three fields failed that test and are gone:
+
+- **`tags`** — the only screen that filters by tag is a deck's own page, which
+  fetches that deck's bank anyway and counts tags from the words in hand.
+- **a top-level aggregate `revision`** — no consumer. Freshness is decided per
+  deck, so an all-decks hash was a value nothing read.
+- **`bank`** — the id spelled twice; see above.
+
+`decks[].revision` is the first 12 hex of `sha256` of the bank file's exact bytes.
+Whitespace the parser ignores still changes it; a cheap false cache invalidation
+beats a missed one. Edit a bank and the frontend's query key changes, the deck
+refetches, the old entry is collected — nobody has to bump anything.
 
 No timestamps anywhere, so regenerating without an input change produces a
 byte-identical file — which is what makes invariant 6 (and the CI check) mean
-anything.
+anything. Because that check is a **byte** comparison, the serialization is part
+of the contract: `JSON.stringify(value, null, 2)` plus a trailing newline, keys in
+the order the contract lists, deck order following `library.json`.

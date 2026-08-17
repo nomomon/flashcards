@@ -47,13 +47,14 @@ export interface DeckSummary {
   name: string;
   color: string;
   languages: DeckLanguages;
-  /** Derived from the bank, so it cannot drift from the words themselves. */
+  /**
+   * Derived from the bank. The one derived field the manifest keeps, because the
+   * overview shows a count and a progress percentage per deck and must do so
+   * without fetching any bank.
+   */
   wordCount: number;
-  tags: string[];
   /** Content hash of the bank file (12 hex chars). */
   revision: string;
-  /** Path of the deck's TSV bank, relative to `data/`. */
-  bank: string;
   /**
    * Optional icon name for the deck tile. Unknown names fall back to a default
    * rather than failing, so a typo costs a deck its icon and nothing more.
@@ -61,9 +62,12 @@ export interface DeckSummary {
   icon?: string;
 }
 
+/**
+ * There is no aggregate `revision` here. Freshness is decided per deck, so an
+ * all-decks hash was a field nothing ever read.
+ */
 export interface Manifest {
   schemaVersion: number;
-  revision: string;
   decks: DeckSummary[];
 }
 

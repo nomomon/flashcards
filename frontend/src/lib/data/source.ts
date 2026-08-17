@@ -118,6 +118,15 @@ export function fetchManifest(): Promise<Manifest> {
   });
 }
 
+/**
+ * Where a deck's words live. Derived from the id rather than carried as a field:
+ * the contract pins banks to `banks/<id>.tsv`, so a stored path could only ever
+ * repeat the id or be wrong.
+ */
+export function bankUrl(deckId: string): string {
+  return dataUrl(`banks/${deckId}.tsv`);
+}
+
 export function fetchAudioIndex(): Promise<AudioIndex> {
   return fetchJson(dataUrl("audio/index.json"), audioIndexSchema);
 }
@@ -127,7 +136,7 @@ export function fetchAudioIndex(): Promise<AudioIndex> {
  * immutable, so the HTTP cache is welcome to help here.
  */
 export async function fetchDeck(summary: DeckSummary): Promise<Deck> {
-  const url = dataUrl(summary.bank);
+  const url = bankUrl(summary.id);
   const response = await fetch(url);
   if (!response.ok) {
     throw new DataFetchError(url, response.status, response.statusText);
@@ -181,7 +190,7 @@ function parseTagCell(cell: string): string[] {
  * comments that were skipped, so they match what an editor shows.
  */
 export function parseBank(text: string, summary: DeckSummary): Deck {
-  const url = dataUrl(summary.bank);
+  const url = bankUrl(summary.id);
   const lines = text.split(/\r\n|\n/);
 
   let columns: string[] | null = null;

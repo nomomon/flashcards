@@ -1,6 +1,5 @@
 {
   "schemaVersion": 2,
-  "revision": "394fe225001b",
   "decks": [
     {
       "id": "dutch-1",
@@ -17,30 +16,13 @@
         }
       },
       "wordCount": 127,
-      "tags": [
-        "conjunction",
-        "demonstrative",
-        "food",
-        "introduction",
-        "l1",
-        "lesson3",
-        "location",
-        "manner",
-        "nature",
-        "pronouns",
-        "question",
-        "reason",
-        "thank",
-        "time",
-        "transport"
-      ],
-      "revision": "00ec2d83c0a5",
-      "bank": "banks/dutch-1.tsv"
+      "revision": "00ec2d83c0a5"
     },
     {
       "id": "dutch-4",
       "name": "Hoofdstuk 4: Reizen",
       "color": "#0E7490",
+      "icon": "plane",
       "languages": {
         "front": {
           "label": "Dutch",
@@ -51,15 +33,8 @@
           "locale": "en-US"
         }
       },
-      "icon": "plane",
       "wordCount": 111,
-      "tags": [
-        "nature",
-        "travel",
-        "weather"
-      ],
-      "revision": "6fae008e74f0",
-      "bank": "banks/dutch-4.tsv"
+      "revision": "6fae008e74f0"
     }
   ]
 }
