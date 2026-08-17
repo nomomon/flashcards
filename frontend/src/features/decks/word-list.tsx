@@ -44,11 +44,11 @@ interface WordListProps {
  *    (`door ... trokken (trekken (door))`); an ellipsis would hide the part that
  *    makes them worth reading.
  *
- * Each row can be played. The button speaks the *prompt* column, so the
- * direction switch doubles as a language chooser for listening: flip it and the
- * same buttons read the other language. Missing audio is silent by design -
- * `useSpeak` falls back to speech synthesis and otherwise does nothing, since a
- * clip that has not been generated yet is a normal state rather than an error.
+ * Both sides of a row can be played, each in its own language: one button per
+ * column, not one per row. Hearing the translation is as useful as hearing the
+ * term, and a single button would have to pick one. Missing audio is silent by
+ * design - `useSpeak` falls back to speech synthesis and otherwise does nothing,
+ * since a clip that has not been generated yet is a normal state, not an error.
  */
 export function WordList({ words, languages, direction }: WordListProps) {
   const { from, to } = directionEndpoints(languages, direction);
@@ -66,10 +66,10 @@ export function WordList({ words, languages, direction }: WordListProps) {
   return (
     <section className="flex flex-col gap-1" aria-label="Words in this deck">
       <div className="grid grid-cols-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {/* The leading indent matches the play button's width so the header sits
-            over its column rather than over the buttons. */}
+        {/* The leading indent matches each play button's width, so a header sits
+            over its own words rather than over the buttons. */}
         <span className="pr-3 pl-11">{from}</span>
-        <span className="pr-3 pl-1">{to}</span>
+        <span className="pr-3 pl-11">{to}</span>
       </div>
 
       <dl className="grid grid-cols-2 overflow-hidden rounded-xl">
@@ -88,16 +88,12 @@ export function WordList({ words, languages, direction }: WordListProps) {
                   striped && "bg-muted/50",
                 )}
               >
-                <button
-                  type="button"
-                  onClick={() => speak(prompt, locales.prompt)}
-                  aria-label={`Listen to ${stripFormatting(prompt)}`}
-                  // -my-1 keeps the 36px tap target from setting the row height:
-                  // it reaches into the row padding instead of adding to it.
-                  className="-my-1 flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                  <Volume2Icon className="size-4" />
-                </button>
+                <SpeakButton
+                  text={prompt}
+                  locale={locales.prompt}
+                  language={from}
+                  onSpeak={speak}
+                />
                 <span className="min-w-0 flex-1">
                   <RichText text={prompt} />
                 </span>
@@ -105,17 +101,60 @@ export function WordList({ words, languages, direction }: WordListProps) {
               <dd
                 className={cn(
                   CELL_CLASS,
-                  "pr-3 pl-1 text-base text-muted-foreground",
+                  "flex items-start gap-1 pr-3 pl-1 text-base text-muted-foreground",
                   striped && "bg-muted/50",
                 )}
               >
-                <RichText text={answer} />
+                <SpeakButton
+                  text={answer}
+                  locale={locales.answer}
+                  language={to}
+                  onSpeak={speak}
+                />
+                <span className="min-w-0 flex-1">
+                  <RichText text={answer} />
+                </span>
               </dd>
             </Fragment>
           );
         })}
       </dl>
     </section>
+  );
+}
+
+interface SpeakButtonProps {
+  text: string;
+  locale: string;
+  /** Language label, e.g. "Dutch". Only used to name the button. */
+  language: string;
+  onSpeak: (text: string, locale: string) => void;
+}
+
+/**
+ * Plays one side of one row, in that side's own language.
+ *
+ * There is one on each column rather than one per row: hearing the translation
+ * is as useful as hearing the term, and a single button would have to guess
+ * which. The label names the language, so a screen reader announces "Listen to
+ * de man in Dutch" and "Listen to the man in English" instead of two buttons
+ * that read identically.
+ *
+ * The text is stripped for the label because `de **man**` should be announced as
+ * `de man`, not with its asterisks.
+ */
+function SpeakButton({ text, locale, language, onSpeak }: SpeakButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSpeak(text, locale)}
+      aria-label={`Listen to ${stripFormatting(text)} in ${language}`}
+      // -my-1 keeps the 36px tap target from setting the row height: it reaches
+      // into the row's padding instead of adding to it.
+      className="-my-1 flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+    >
+      <Volume2Icon className="size-4" />
+    </button>
   );
 }
 
