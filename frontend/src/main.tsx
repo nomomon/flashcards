@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AppQueryProvider } from "@/lib/query/provider";
+import { registerServiceWorker } from "@/pwa";
 import { router } from "@/router";
 
 import "./index.css";
@@ -27,3 +28,7 @@ createRoot(rootElement).render(
     </ThemeProvider>
   </StrictMode>,
 );
+
+// After render, not before: registration is not on the path to first paint, and
+// its only UI is a toast that needs the toaster mounted to appear in.
+registerServiceWorker();
