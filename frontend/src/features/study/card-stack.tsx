@@ -90,6 +90,13 @@ const VANISH: Variants = {
 const depthScale = (depth: number) => 1 - depth * 0.045;
 const depthOffset = (depth: number) => depth * 16;
 const depthOpacity = (depth: number) => 1 - depth * 0.12;
+/**
+ * Cards behind are slightly out of focus, which is what stops the next word
+ * being readable through the gap and reads as depth rather than as a copy.
+ * `blur` is a filter, so it is animated by the same `animate` prop as the rest
+ * of the depth transition and lands in step with it.
+ */
+const depthBlur = (depth: number) => `blur(${depth * 1.6}px)`;
 
 interface CardStackProps {
   /** The queue, front card first. Only the first few are mounted. */
@@ -112,22 +119,43 @@ export function CardStack({
   const reduceMotion = useReducedMotion() ?? false;
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-sm">
-      {/* `initial={false}` keeps the stack from animating in on the first
-          render; cards that join later still slide up from behind. */}
-      <AnimatePresence initial={false} custom={exitDirection}>
-        {cards.slice(0, VISIBLE_CARDS).map((card, depth) => (
-          <StackCard
-            key={card.wordId}
-            card={card}
-            depth={depth}
-            flipped={flippedKey === card.wordId}
-            reduceMotion={reduceMotion}
-            onFlip={onFlip}
-            onRate={onRate}
-          />
-        ))}
-      </AnimatePresence>
+    /*
+     * The clip layer, and it is load-bearing rather than cosmetic.
+     *
+     * A transform does not affect layout, but it *does* extend the scrollable
+     * overflow of every ancestor. So a card thrown 640px to the right, tilted
+     * 12 degrees, grew the document in both axes and the page sprouted a
+     * horizontal and a vertical scrollbar mid-swipe.
+     *
+     * Clipping here rather than hiding overflow on the body: the body is not
+     * where the problem is, and suppressing scrollbars globally would also
+     * suppress legitimate ones on a long deck page. `overflow-clip` (not
+     * `hidden`) because clip paints nothing outside the box without becoming a
+     * scroll container, so this element never joins the scroll chain.
+     *
+     * `-mx-4 px-4` cancels the page gutter so the clip edge is the container
+     * edge - which on a phone is the screen edge, making "thrown off screen"
+     * literally true. `py-10 -my-10` opens 40px above and below for the tilt to
+     * live in, without changing what the stack occupies in the layout.
+     */
+    <div className="relative -mx-4 -my-10 overflow-clip px-4 py-10">
+      <div className="relative mx-auto aspect-square w-full max-w-sm">
+        {/* `initial={false}` keeps the stack from animating in on the first
+            render; cards that join later still slide up from behind. */}
+        <AnimatePresence initial={false} custom={exitDirection}>
+          {cards.slice(0, VISIBLE_CARDS).map((card, depth) => (
+            <StackCard
+              key={card.wordId}
+              card={card}
+              depth={depth}
+              flipped={flippedKey === card.wordId}
+              reduceMotion={reduceMotion}
+              onFlip={onFlip}
+              onRate={onRate}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -222,11 +250,15 @@ function StackCard({
         scale: depthScale(depth + 1),
         y: depthOffset(depth + 1),
         opacity: 0,
+        filter: depthBlur(depth + 1),
       }}
       animate={{
         scale: depthScale(depth),
         y: depthOffset(depth),
         opacity: depthOpacity(depth),
+        // Sharpens as it comes forward, so arriving at the front *is* becoming
+        // readable.
+        filter: depthBlur(depth),
       }}
       transition={reduceMotion ? INSTANT : SPRING}
       variants={reduceMotion ? VANISH : FLY_OUT}

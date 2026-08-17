@@ -1,8 +1,15 @@
+import { Volume2Icon } from "lucide-react";
 import { Fragment } from "react";
 
 import { RichText } from "@/components/rich-text";
 import { Skeleton } from "@/components/ui/skeleton";
-import { directionEndpoints, orientWord } from "@/features/study/directions";
+import {
+  directionEndpoints,
+  orientLocales,
+  orientWord,
+} from "@/features/study/directions";
+import { useSpeak } from "@/lib/audio/use-speech";
+import { stripFormatting } from "@/lib/markup";
 import { cn } from "@/lib/utils";
 import type { DeckLanguages, Word } from "@/types/deck";
 import type { StudyDirection } from "@/types/session";
@@ -36,9 +43,17 @@ interface WordListProps {
  * 3. **Wrap, never truncate.** Some fronts carry a whole construction
  *    (`door ... trokken (trekken (door))`); an ellipsis would hide the part that
  *    makes them worth reading.
+ *
+ * Each row can be played. The button speaks the *prompt* column, so the
+ * direction switch doubles as a language chooser for listening: flip it and the
+ * same buttons read the other language. Missing audio is silent by design -
+ * `useSpeak` falls back to speech synthesis and otherwise does nothing, since a
+ * clip that has not been generated yet is a normal state rather than an error.
  */
 export function WordList({ words, languages, direction }: WordListProps) {
   const { from, to } = directionEndpoints(languages, direction);
+  const locales = orientLocales(languages, direction);
+  const { speak } = useSpeak();
 
   if (words.length === 0) {
     return (
@@ -51,7 +66,9 @@ export function WordList({ words, languages, direction }: WordListProps) {
   return (
     <section className="flex flex-col gap-1" aria-label="Words in this deck">
       <div className="grid grid-cols-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        <span className="px-3">{from}</span>
+        {/* The leading indent matches the play button's width so the header sits
+            over its column rather than over the buttons. */}
+        <span className="pr-3 pl-11">{from}</span>
         <span className="pr-3 pl-1">{to}</span>
       </div>
 
@@ -67,11 +84,23 @@ export function WordList({ words, languages, direction }: WordListProps) {
               <dt
                 className={cn(
                   CELL_CLASS,
-                  "px-3 text-base",
+                  "flex items-start gap-1 pr-3 pl-1 text-base",
                   striped && "bg-muted/50",
                 )}
               >
-                <RichText text={prompt} />
+                <button
+                  type="button"
+                  onClick={() => speak(prompt, locales.prompt)}
+                  aria-label={`Listen to ${stripFormatting(prompt)}`}
+                  // -my-1 keeps the 36px tap target from setting the row height:
+                  // it reaches into the row padding instead of adding to it.
+                  className="-my-1 flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <Volume2Icon className="size-4" />
+                </button>
+                <span className="min-w-0 flex-1">
+                  <RichText text={prompt} />
+                </span>
               </dt>
               <dd
                 className={cn(
