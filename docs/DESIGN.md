@@ -27,11 +27,19 @@ the same geometry as a component.
 | --- | --- | --- |
 | Box | `100 × 100` | The deck tile is `aspect-square`. |
 | Corner radius | `26` | The tile's `rounded-xl` is 0.29·S. The mark is a touch tighter, at 0.26, because at icon scale the rounder corner reads as a pill. |
-| Seam | `M 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100` | The gutter of the word list's `grid-cols-2`. |
+| Seam | `M 50 -20 L 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100 L 50 120` | The gutter of the word list's `grid-cols-2`. |
 | Lean | `22°` | Measured: at 0° the seam is an inert gutter, at 38° the glyphs are squeezed into the corners. |
 | Seam width | `10` | 10% of the box. Widens to 13-15% below 32px so it stays open. |
 | Lateral deviation | `2.65` | The curve's actual maximum departure from straight, 2.6% of the box. The restraint is the point. |
 | Max tangent angle | `7.3°` | From vertical, at `s = 1/3`. Small enough that the two halves can be cut by translation with the gap staying even to within 0.8%. |
+
+The seam runs from `-20` to `120` rather than `0` to `100`. Rotating a path that
+spans exactly the box pulls its endpoints inward by `50 × (1 - cos 22°) = 3.64`,
+which leaves the cut short of both edges and the two halves joined - fatal for a
+mark whose claim is that the square is cut once. The straight runs extend it with
+C1 continuity, since the curve's tangents are already vertical there, and the clip
+takes the overshoot off. The extended seam crosses `y = 0` at `x = 70.2`, inside
+the flat span of `26..74`, so it exits through the edge and not a corner.
 
 The seam has vertical tangents at both edges and is symmetric under a 180°
 rotation about the centre, so the two pieces it cuts are **congruent**: each is

@@ -12,7 +12,16 @@ interface MarkProps {
 /** The seam, leaned. See `docs/DESIGN.md` for where each number comes from. */
 const SQUARE =
   "M 26 0 H 74 A 26 26 0 0 1 100 26 V 74 A 26 26 0 0 1 74 100 H 26 A 26 26 0 0 1 0 74 V 26 A 26 26 0 0 1 26 0 Z";
-const SEAM = "M 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100";
+/*
+ * The seam runs past the box on both ends. Rotating a path that spans exactly
+ * 0..100 pulls its endpoints inward by 50 * (1 - cos 22) = 3.64, which left the
+ * cut stopping short of both edges - so the two halves were still joined, and a
+ * mark whose whole claim is "one square cut once" was not cutting anything. The
+ * straight runs extend it with C1 continuity, because the curve's tangents are
+ * already vertical at both ends, and the clip path takes the overshoot off.
+ */
+const SEAM =
+  "M 50 -20 L 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100 L 50 120";
 
 /**
  * The app's mark: one rounded square cut once, the cut leaned 22 degrees.

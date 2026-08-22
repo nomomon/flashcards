@@ -11,7 +11,10 @@
   -->
   <mask id="seam">
     <rect width="100" height="100" fill="#fff"/>
-    <path d="M 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100"
+    <!-- Runs past the box on both ends: the 22-degree rotation pulls a path that
+         spans exactly 0..100 inward by 3.64 at each end, which would leave the
+         cut short of the edges and the two halves joined. -->
+    <path d="M 50 -20 L 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100 L 50 120"
           transform="rotate(22 50 50)" fill="none" stroke="#000" stroke-width="14"/>
   </mask>
   <path d="M 26 0 H 74 A 26 26 0 0 1 100 26 V 74 A 26 26 0 0 1 74 100 H 26
