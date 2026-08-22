@@ -36,7 +36,13 @@ export function DeckTile({ deck }: { deck: DeckSummary }) {
           like every other hue on this screen does. */}
       <div className="bloom bloom-deck bloom-fade" aria-hidden="true" />
       <div className="pointer-events-none relative flex h-full flex-col justify-between gap-2 p-4">
-        <h2 className="font-heading text-lg leading-tight font-semibold">
+        {/* The name takes the deck's accent so the title and the icon read as
+            one object rather than a label sitting above a picture. Light mode
+            only: `--deck-accent` mixes the deck toward the foreground, so on a
+            dark ground it resolves to a pale tint of the hue, and a grid of six
+            differently-tinted near-whites reads as inconsistent rather than as
+            colour-coded. */}
+        <h2 className="font-heading text-lg leading-tight font-semibold text-[var(--deck-accent)] dark:text-foreground">
           {deck.name}
         </h2>
         <DeckIcon
