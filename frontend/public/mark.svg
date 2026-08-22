@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <title>Flashcards</title>
+  <!--
+    The mark, reduced: one rounded square cut once, the cut leaned 22 degrees.
+    The square is the deck tile's geometry and the seam is the gutter of the word
+    list's two columns. See docs/DESIGN.md for where every number comes from.
+
+    The seam is a mask rather than a stroke in a second colour, so the cut is
+    genuinely transparent and the plate takes `currentColor`. One file therefore
+    works on a light header, a dark home screen, or over a deck's own accent.
+  -->
+  <mask id="seam">
+    <rect width="100" height="100" fill="#fff"/>
+    <path d="M 50 0 C 50 20 56 30 50 50 C 44 70 50 80 50 100"
+          transform="rotate(22 50 50)" fill="none" stroke="#000" stroke-width="14"/>
+  </mask>
+  <path d="M 26 0 H 74 A 26 26 0 0 1 100 26 V 74 A 26 26 0 0 1 74 100 H 26
+           A 26 26 0 0 1 0 74 V 26 A 26 26 0 0 1 26 0 Z"
+        fill="currentColor" mask="url(#seam)"/>
+</svg>

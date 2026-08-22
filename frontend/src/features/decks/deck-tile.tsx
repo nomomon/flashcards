@@ -31,7 +31,11 @@ export function DeckTile({ deck }: { deck: DeckSummary }) {
       className="relative aspect-square overflow-hidden rounded-xl bg-[var(--deck-surface)] ring-1 ring-[var(--deck-edge)] transition-transform has-[a:active]:scale-[0.99] has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50"
       style={deckColorVars(deck.color)}
     >
-      <div className="pointer-events-none flex h-full flex-col justify-between gap-2 p-4">
+      {/* The deck's own colour, not the brand's: the tile is the one large
+          surface a deck owns, so the atmosphere here has to come from the data
+          like every other hue on this screen does. */}
+      <div className="bloom bloom-deck bloom-fade" aria-hidden="true" />
+      <div className="pointer-events-none relative flex h-full flex-col justify-between gap-2 p-4">
         <h2 className="font-heading text-lg leading-tight font-semibold">
           {deck.name}
         </h2>

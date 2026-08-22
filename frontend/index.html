@@ -15,7 +15,34 @@
       name="description"
       content="A simple flashcards app for learning languages."
     />
-    <meta name="theme-color" content="#ffffff" />
+    <!-- Both themes, so the browser chrome matches the page it frames rather
+         than staying white behind a dark app. The values are --background from
+         index.css, resolved to sRGB. -->
+    <meta
+      name="theme-color"
+      content="#fdfdff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0a090f"
+      media="(prefers-color-scheme: dark)"
+    />
+
+    <!-- Link previews. Absolute URLs because crawlers do not resolve relative
+         ones, and the site is served from one known origin. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Flashcards" />
+    <meta
+      property="og:description"
+      content="Dutch flashcards with no accounts and no backend. A deck is a text file, so adding a word is adding a line."
+    />
+    <meta
+      property="og:image"
+      content="https://flashcards.nomomon.xyz/social.jpg"
+    />
+    <meta property="og:url" content="https://flashcards.nomomon.xyz/" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>

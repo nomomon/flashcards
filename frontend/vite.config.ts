@@ -71,10 +71,11 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         display: "standalone",
-        // Unchanged from the existing <meta name="theme-color">: installing the
-        // app should not restyle it.
-        theme_color: "#ffffff",
-        background_color: "#ffffff",
+        // Matches <meta name="theme-color"> and --background in index.css. A
+        // manifest takes one value, so this is the light one: the splash it
+        // paints should look like the app opening, not like a different app.
+        theme_color: "#fdfdff",
+        background_color: "#fdfdff",
         icons: [
           {
             src: "/icons/icon-192.png",
@@ -88,12 +89,12 @@ export default defineConfig({
             type: "image/png",
             purpose: "any",
           },
-          // The same artwork serves as maskable: its content sits within ±370px
-          // of centre on a 1040px canvas, inside the 416px safe circle, and the
-          // field behind it is flat colour - so a mask can crop the corners
-          // without eating anything.
+          // Its own file rather than the `any` artwork reused. The mark now
+          // fills its square edge to edge, so a maskable crop would bite into
+          // the glyphs; this variant scales the mark to 74% and lets the ground
+          // take the crop, keeping everything inside the 80% safe circle.
           {
-            src: "/icons/icon-512.png",
+            src: "/icons/icon-maskable-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -122,7 +123,8 @@ export default defineConfig({
             manifest: entries.filter(
               (entry) =>
                 !entry.url.startsWith("icons/") &&
-                entry.url !== "apple-touch-icon.png",
+                entry.url !== "apple-touch-icon.png" &&
+                entry.url !== "social.jpg",
             ),
             warnings: [],
           }),
