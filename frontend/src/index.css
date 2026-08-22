@@ -43,6 +43,10 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-brand: var(--brand);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-pink: var(--brand-pink);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -53,20 +57,27 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /*
+   * Signature hue. Every neutral below carries a trace of it - 0.003 to 0.018
+   * chroma, under the threshold where a grey reads as coloured but over the one
+   * where it reads as unconsidered. One number moves the whole app's temperature.
+   */
+  --hue: 295;
+
+  --background: oklch(0.995 0.003 var(--hue));
+  --foreground: oklch(0.16 0.012 var(--hue));
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.16 0.012 var(--hue));
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.16 0.012 var(--hue));
+  --primary: oklch(0.52 0.208 var(--hue));
+  --primary-foreground: oklch(0.985 0.008 var(--hue));
+  --secondary: oklch(0.968 0.006 var(--hue));
+  --secondary-foreground: oklch(0.22 0.014 var(--hue));
+  --muted: oklch(0.968 0.006 var(--hue));
+  --muted-foreground: oklch(0.552 0.014 var(--hue));
+  --accent: oklch(0.968 0.006 var(--hue));
+  --accent-foreground: oklch(0.22 0.014 var(--hue));
   --destructive: oklch(0.577 0.245 27.325);
   /* Verdict colours. Deliberately separate from --destructive even though
      "incorrect" is also red: destructive marks an action that loses data (reset
@@ -76,40 +87,50 @@
   --correct-foreground: oklch(0.985 0 0);
   --incorrect: oklch(0.592 0.212 24);
   --incorrect-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.918 0.007 var(--hue));
+  --input: oklch(0.918 0.007 var(--hue));
+  --ring: oklch(0.6 0.176 var(--hue));
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0.004 var(--hue));
+  --sidebar-foreground: oklch(0.16 0.012 var(--hue));
+  --sidebar-primary: oklch(0.52 0.208 var(--hue));
+  --sidebar-primary-foreground: oklch(0.985 0.008 var(--hue));
+  --sidebar-accent: oklch(0.968 0.006 var(--hue));
+  --sidebar-accent-foreground: oklch(0.22 0.014 var(--hue));
+  --sidebar-border: oklch(0.918 0.007 var(--hue));
+  --sidebar-ring: oklch(0.6 0.176 var(--hue));
+
+  /*
+   * Atmosphere. These three are the only saturated colours in the app that are
+   * not a deck's, and they are never a surface anything is read on - see the
+   * `.atmosphere` utility below.
+   */
+  --brand: oklch(0.52 0.208 var(--hue));
+  --brand-blue: oklch(0.58 0.196 265);
+  --brand-violet: oklch(0.56 0.232 300);
+  --brand-pink: oklch(0.7 0.188 352);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.145 0.014 var(--hue));
+  --foreground: oklch(0.985 0.005 var(--hue));
+  --card: oklch(0.205 0.016 var(--hue));
+  --card-foreground: oklch(0.985 0.005 var(--hue));
+  --popover: oklch(0.205 0.016 var(--hue));
+  --popover-foreground: oklch(0.985 0.005 var(--hue));
+  --primary: oklch(0.72 0.174 var(--hue));
+  --primary-foreground: oklch(0.18 0.02 var(--hue));
+  --secondary: oklch(0.272 0.018 var(--hue));
+  --secondary-foreground: oklch(0.985 0.005 var(--hue));
+  --muted: oklch(0.272 0.018 var(--hue));
+  --muted-foreground: oklch(0.712 0.016 var(--hue));
+  --accent: oklch(0.272 0.018 var(--hue));
+  --accent-foreground: oklch(0.985 0.005 var(--hue));
   --destructive: oklch(0.704 0.191 22.216);
   /* Lifted and de-saturated for a dark ground, where the light values read
      muddy rather than green and red. */
@@ -117,22 +138,27 @@
   --correct-foreground: oklch(0.208 0 0);
   --incorrect: oklch(0.704 0.191 22.216);
   --incorrect-foreground: oklch(0.208 0 0);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 11%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.62 0.16 var(--hue));
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.205 0.016 var(--hue));
+  --sidebar-foreground: oklch(0.985 0.005 var(--hue));
+  --sidebar-primary: oklch(0.72 0.174 var(--hue));
+  --sidebar-primary-foreground: oklch(0.18 0.02 var(--hue));
+  --sidebar-accent: oklch(0.272 0.018 var(--hue));
+  --sidebar-accent-foreground: oklch(0.985 0.005 var(--hue));
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.62 0.16 var(--hue));
+
+  --brand: oklch(0.72 0.174 var(--hue));
+  --brand-blue: oklch(0.66 0.184 265);
+  --brand-violet: oklch(0.66 0.212 300);
+  --brand-pink: oklch(0.76 0.166 352);
 }
 
 @layer base {
@@ -144,5 +170,83 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer components {
+  /*
+   * The brand gradient, and the only place it is allowed to appear.
+   *
+   * Three rules hold it in check, and they are the whole reason a saturated
+   * gradient can live in an app whose colour otherwise belongs to deck data:
+   *
+   * 1. It is never a surface. Nothing is read on top of a bloom - it sits
+   *    behind a score ring, an icon, an empty state. The blur is past
+   *    legibility on purpose.
+   * 2. It is a separate layer, not a background on a content box, so the blur
+   *    gets bleed room (`inset: -30%`) without the clip reaching real content.
+   * 3. The grain is not decoration. A wide gradient across three hues bands
+   *    visibly on an 8-bit display; noise at low opacity is what breaks the
+   *    banding up. It earns its place before it looks nice.
+   *
+   * `border-radius: inherit` so it can sit inside a rounded card and take that
+   * card's corner without being told what it is.
+   */
+  .bloom {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .bloom::before,
+  .bloom::after {
+    content: "";
+    position: absolute;
+  }
+
+  .bloom::before {
+    inset: -30%;
+    background:
+      radial-gradient(42% 55% at 20% 26%, var(--brand-pink), transparent 70%),
+      radial-gradient(46% 58% at 78% 32%, var(--brand-blue), transparent 72%),
+      radial-gradient(58% 66% at 52% 84%, var(--brand-violet), transparent 74%);
+    filter: blur(44px);
+    opacity: 0.46;
+  }
+
+  .bloom::after {
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    opacity: 0.2;
+    mix-blend-mode: overlay;
+  }
+
+  /* On a dark ground the same opacity reads as fog rather than light. */
+  .dark .bloom::before {
+    opacity: 0.38;
+  }
+
+  .dark .bloom::after {
+    opacity: 0.26;
+  }
+
+  /* Fades its own edge instead of ending on one. Without this a clipped bloom
+     reads as a coloured disc sitting behind the content rather than as light
+     coming off it. The mask takes the grain with it, which is what keeps the
+     noise from stopping in a visible ring. */
+  .bloom-fade {
+    mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
+  }
+
+  /* A deck's own hue, bloomed. Used on the deck page, where the accent is in
+     scope - so the atmosphere is the deck's colour rather than the brand's, and
+     the rule that hue belongs to data survives the rebrand. */
+  .bloom-deck::before {
+    background:
+      radial-gradient(50% 60% at 26% 28%, var(--deck-accent), transparent 72%),
+      radial-gradient(56% 64% at 74% 76%, var(--deck), transparent 74%);
   }
 }

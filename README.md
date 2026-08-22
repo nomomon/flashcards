@@ -23,7 +23,8 @@ calls an API and never needs a key.
 │   └── audio-gen/   generate missing pronunciation audio via Gemini TTS
 └── docs/
     ├── ARCHITECTURE.md   how the frontend is layered, and why
-    └── DATA_CONTRACT.md  the exact shape of everything in data/
+    ├── DATA_CONTRACT.md  the exact shape of everything in data/
+    └── DESIGN.md         the visual system: the mark, colour, atmosphere
 ```
 
 `data/` is copied into the build output, so the deployed site serves its own data
