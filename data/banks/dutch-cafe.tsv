@@ -1,0 +1,176 @@
+id	front	back	tags
+# Asking politely, and the little words that carry an order
+alstublieft-a-u-b	alstublieft (a.u.b.)	please, here you go *(formal)*	politeness
+dank-u-wel	dank u wel	thank you *(formal)*	politeness
+ja-graag	ja, graag	yes, please	politeness,ordering
+nee-dank-u	nee, dank u	no, thank you	politeness
+mag-ik	Mag ik ...?	May I have ...?	politeness,ordering
+ik-wil-graag	Ik wil graag ...	I would like ...	ordering
+ik-zou-graag-willen	Ik zou graag ... willen	I would like ... *(more polite)*	ordering
+doet-u-mij-maar	Doet u mij maar ...	I'll just have ... *(very Dutch)*	ordering
+voor-mij-graag	Voor mij ..., graag.	For me ..., please.	ordering
+ik-hoef-niets-dank-u	Ik hoef niets, dank u.	Nothing for me, thanks.	politeness
+
+# Walking in, and getting a table
+goedemiddag	Goedemiddag!	Good afternoon!	greeting
+goedenavond	Goedenavond!	Good evening!	greeting
+heeft-u-gereserveerd	Heeft u gereserveerd?	*staff:* do you have a reservation?	staff,seating
+ik-heb-gereserveerd-op-naam-van	Ik heb gereserveerd op naam van ...	I have a reservation under the name of ...	seating
+een-tafel-voor-twee-graag	Een tafel voor twee, graag.	A table for two, please.	seating
+hebben-jullie-nog-plek	Hebben jullie nog plek?	Do you still have room?	seating
+is-deze-tafel-vrij	Is deze tafel vrij?	Is this table free?	seating
+mogen-we-op-het-terras-zitten	Mogen we op het terras zitten?	May we sit on the terrace?	seating
+het-terras	het terras	the terrace, the outdoor seating	seating
+binnen-of-buiten	binnen of buiten	inside or outside	seating
+neemt-u-plaats	Neemt u plaats.	*staff:* have a seat.	staff,seating
+komt-u-maar-mee	Komt u maar mee.	*staff:* come with me, follow me.	staff,seating
+ik-kom-zo-bij-u	Ik kom zo bij u.	*staff:* I'll be right with you.	staff,seating
+hoe-lang-is-de-wachttijd	Hoe lang is de wachttijd?	How long is the wait?	seating
+waar-is-het-toilet	Waar is het toilet?	Where is the toilet?	seating
+de-bediening	de bediening	the service, the waiting staff	seating
+
+# Reading the menu
+de-menukaart	de menukaart	the menu	menu
+de-kaart	de kaart	the menu *(short)*	menu
+mag-ik-de-kaart-alstublieft	Mag ik de kaart, alstublieft?	May I have the menu, please?	menu
+de-wijnkaart	de wijnkaart	the wine list	menu,drinks
+de-voorgerechten	de voorgerechten	the starters	menu
+het-hoofdgerecht	het hoofdgerecht	the main course	menu
+het-nagerecht	het nagerecht	the dessert	menu
+het-toetje	het toetje	the dessert *(informal)*	menu
+de-dagschotel	de dagschotel	the dish of the day	menu
+het-dagmenu	het dagmenu	the set menu of the day	menu
+de-soep-van-de-dag	de soep van de dag	the soup of the day	menu,food
+de-specialiteit-van-het-huis	de specialiteit van het huis	the house speciality	menu
+wat-kunt-u-aanbevelen	Wat kunt u aanbevelen?	What do you recommend?	menu,ordering
+waar-bestaat-dat-uit	Waar bestaat dat uit?	What does that consist of?	menu
+wat-zit-er-in	Wat zit er in?	What's in it?	menu,dietary
+
+# What they ask you, and how you order
+heeft-u-al-gekozen	Heeft u al gekozen?	*staff:* have you decided?	staff,ordering
+wat-mag-het-zijn	Wat mag het zijn?	*staff:* what can I get you?	staff,ordering
+zegt-u-het-maar	Zegt u het maar.	*staff:* go ahead, tell me.	staff,ordering
+wilt-u-iets-drinken	Wilt u iets drinken?	*staff:* would you like something to drink?	staff,ordering
+wilt-u-nog-iets-drinken	Wilt u nog iets drinken?	*staff:* would you like another drink?	staff,ordering
+wilt-u-er-nog-iets-bij	Wilt u er nog iets bij?	*staff:* would you like anything with that?	staff,ordering
+anders-nog-iets	Anders nog iets?	*staff:* anything else?	staff,ordering
+is-dat-alles	Is dat alles?	*staff:* is that everything?	staff,ordering
+komt-eraan	Komt eraan!	*staff:* coming right up!	staff,ordering
+ik-heb-nog-niet-gekozen	Ik heb nog niet gekozen.	I haven't decided yet.	ordering
+mag-ik-nog-even-kijken	Mag ik nog even kijken?	Could I have another look?	ordering
+kan-ik-bestellen	Kan ik bestellen?	Can I order?	ordering
+bestellen	bestellen	to order	ordering
+de-bestelling	de bestelling	the order	ordering
+doe-mij-maar-hetzelfde	Doe mij maar hetzelfde.	I'll have the same.	ordering
+hetzelfde-voor-mij-graag	Hetzelfde voor mij, graag.	The same for me, please.	ordering
+dat-was-het-dank-u	Dat was het, dank u.	That was it, thank you.	ordering
+eet-smakelijk	Eet smakelijk!	Enjoy your meal!	food
+heeft-het-gesmaakt	Heeft het gesmaakt?	*staff:* did you enjoy it?	staff,food
+het-was-heerlijk	Het was heerlijk.	It was delicious.	food
+
+# For here or to take away
+voor-hier-of-meenemen	Voor hier of meenemen?	*staff:* for here or to take away?	staff,takeaway
+hier-of-mee	Hier of mee?	*staff:* here or to go? *(short)*	staff,takeaway
+meenemen	meenemen	to take away	takeaway
+om-mee-te-nemen-graag	Om mee te nemen, graag.	To take away, please.	takeaway
+voor-hier-graag	Voor hier, graag.	For here, please.	takeaway
+het-bekertje	het bekertje	the (paper) cup	takeaway,coffee
+het-deksel	het deksel	the lid	takeaway
+het-rietje	het rietje	the straw	takeaway
+wilt-u-een-zakje	Wilt u een zakje?	*staff:* would you like a bag?	staff,takeaway
+kunt-u-het-inpakken	Kunt u het inpakken?	Could you pack it up?	takeaway
+ik-kom-een-bestelling-ophalen	Ik kom een bestelling ophalen.	I'm here to pick up an order.	takeaway
+afhalen	afhalen	to pick up (a takeaway order)	takeaway
+
+# Coffee, tea and something sweet
+een-bakje-koffie	een bakje koffie	a cup of coffee *(informal)*	coffee
+koffie-verkeerd	koffie verkeerd	coffee with plenty of warm milk *(lit. "wrong coffee")*	coffee
+zwarte-koffie	zwarte koffie	black coffee	coffee
+koffie-met-melk	koffie met melk	coffee with milk	coffee
+met-of-zonder-suiker	Met of zonder suiker?	*staff:* with or without sugar?	staff,coffee
+klein-of-groot	Klein of groot?	*staff:* small or large?	staff,coffee
+het-kannetje-melk	het kannetje melk	the little jug of milk	coffee
+de-havermelk	de havermelk	oat milk	coffee
+de-sojamelk	de sojamelk	soy milk	coffee
+de-amandelmelk	de amandelmelk	almond milk	coffee
+de-thee	de thee	the tea	coffee
+de-muntthee	de muntthee	mint tea	coffee
+het-gebak	het gebak	the pastry, the cake	coffee,food
+het-appelgebak-met-slagroom	het appelgebak met slagroom	apple pie with whipped cream	coffee,food
+de-stroopwafel	de stroopwafel	the syrup waffle	coffee,food
+
+# At the bar
+een-biertje	een biertje	a beer	drinks
+van-de-tap	van de tap	on tap, draught	drinks
+de-huiswijn	de huiswijn	the house wine	drinks
+een-glas-rode-wijn	een glas rode wijn	a glass of red wine	drinks
+de-witte-wijn	de witte wijn	the white wine	drinks
+spa-rood	spa rood	sparkling water	drinks
+spa-blauw	spa blauw	still water	drinks
+het-kraanwater	het kraanwater	tap water	drinks
+een-karafje-water	een karafje water	a small carafe of water	drinks
+de-frisdrank	de frisdrank	the soft drink	drinks
+de-jus-d-orange	de jus d'orange	the orange juice	drinks
+proost	Proost!	Cheers!	drinks
+nog-een-rondje	Nog een rondje?	Another round?	drinks
+nog-een-graag	Nog een, graag.	Another one, please.	drinks
+
+# What you actually end up eating
+het-broodje	het broodje	the roll, the sandwich	food
+het-broodje-gezond	het broodje gezond	the "healthy" sandwich (cheese, egg, salad)	food
+de-tosti	de tosti	the toasted cheese sandwich	food
+de-patat	de patat	the fries	food
+patat-met	patat met	fries with mayonnaise	food
+de-kroket	de kroket	the croquette	food,snacks
+de-bitterballen	de bitterballen	deep-fried ragout balls	food,snacks
+het-borrelhapje	het borrelhapje	the snack served with drinks	snacks,drinks
+de-borrelplank	de borrelplank	the sharing board of snacks	snacks,drinks
+de-saus	de saus	the sauce	food
+
+# Saying what you can and cannot eat
+ik-ben-allergisch-voor-noten	Ik ben allergisch voor noten.	I'm allergic to nuts.	dietary
+ik-ben-vegetari-r	Ik ben vegetariër.	I'm a vegetarian.	dietary
+is-dit-vegetarisch	Is dit vegetarisch?	Is this vegetarian?	dietary
+zitten-er-noten-in	Zitten er noten in?	Are there nuts in it?	dietary
+heeft-u-iets-zonder-vlees	Heeft u iets zonder vlees?	Do you have anything without meat?	dietary
+glutenvrij	glutenvrij	gluten-free	dietary
+ik-eet-geen-varkensvlees	Ik eet geen varkensvlees.	I don't eat pork.	dietary
+zonder	zonder	without	dietary
+
+# Asking for things at the table
+mag-ik-nog-een-vorkje	Mag ik nog een vorkje?	Could I have another fork?	table
+de-vork	de vork	the fork	table
+het-mes	het mes	the knife	table
+de-lepel	de lepel	the spoon	table
+het-servetje	het servetje	the napkin	table
+kunt-u-de-tafel-afruimen	Kunt u de tafel afruimen?	Could you clear the table?	table
+mag-ik-nog-wat-water	Mag ik nog wat water?	Could I have some more water?	table
+
+# When something is off
+dit-heb-ik-niet-besteld	Dit heb ik niet besteld.	I didn't order this.	problem
+het-eten-is-koud	Het eten is koud.	The food is cold.	problem
+ik-heb-nog-niets-gekregen	Ik heb nog niets gekregen.	I haven't received anything yet.	problem
+
+# Paying
+de-rekening	de rekening	the bill	paying
+mag-ik-de-rekening-alstublieft	Mag ik de rekening, alstublieft?	May I have the bill, please?	paying
+mag-ik-afrekenen	Mag ik afrekenen?	Could I settle up?	paying
+afrekenen	afrekenen	to settle the bill	paying
+pinnen	pinnen	to pay by (debit) card	paying
+kan-ik-pinnen	Kan ik pinnen?	Can I pay by card?	paying
+alleen-pinnen	Alleen pinnen.	*staff:* card only.	staff,paying
+wilt-u-pinnen-of-contant-betalen	Wilt u pinnen of contant betalen?	*staff:* card or cash?	staff,paying
+contant	contant	cash	paying
+samen-of-apart	Samen of apart?	*staff:* together or separately?	staff,paying
+kunnen-we-apart-betalen	Kunnen we apart betalen?	Can we pay separately?	paying
+de-rekening-splitsen	de rekening splitsen	to split the bill	paying
+laat-maar-zitten	Laat maar zitten.	Keep the change.	paying
+de-fooi	de fooi	the tip	paying
+het-wisselgeld	het wisselgeld	the change	paying
+de-bon	de bon	the receipt	paying
+wilt-u-de-bon	Wilt u de bon?	*staff:* would you like the receipt?	staff,paying
+mag-ik-een-bonnetje	Mag ik een bonnetje?	Could I have a receipt?	paying
+
+# On the way out
+fijne-dag-nog	Fijne dag nog!	Have a nice day!	greeting
+prettige-avond	Prettige avond!	Have a nice evening!	greeting

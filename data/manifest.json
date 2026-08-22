@@ -35,6 +35,24 @@
       },
       "wordCount": 111,
       "revision": "6fae008e74f0"
+    },
+    {
+      "id": "dutch-cafe",
+      "name": "Café & Restaurant",
+      "color": "#9F1239",
+      "icon": "utensils",
+      "languages": {
+        "front": {
+          "label": "Dutch",
+          "locale": "nl-NL"
+        },
+        "back": {
+          "label": "English",
+          "locale": "en-US"
+        }
+      },
+      "wordCount": 150,
+      "revision": "a2fc9b9ca13d"
     }
   ]
 }

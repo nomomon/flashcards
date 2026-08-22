@@ -31,6 +31,22 @@
           "locale": "en-US"
         }
       }
+    },
+    {
+      "id": "dutch-cafe",
+      "name": "Café & Restaurant",
+      "color": "#9F1239",
+      "icon": "utensils",
+      "languages": {
+        "front": {
+          "label": "Dutch",
+          "locale": "nl-NL"
+        },
+        "back": {
+          "label": "English",
+          "locale": "en-US"
+        }
+      }
     }
   ]
 }
