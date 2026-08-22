@@ -1,3 +1,5 @@
+import type { Ref } from "react";
+
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -11,6 +13,13 @@ interface DeckHeaderProps {
   color: string;
   wordCount: number;
   known: number;
+  /**
+   * Attached to the `h1`. The page watches that element to know when the title
+   * has slid under the sticky top bar, which is its cue to show the name up
+   * there instead - so the watcher has to be the heading itself, not a stand-in
+   * placed near it.
+   */
+  nameRef?: Ref<HTMLHeadingElement>;
 }
 
 /**
@@ -29,6 +38,7 @@ export function DeckHeader({
   color,
   wordCount,
   known,
+  nameRef,
 }: DeckHeaderProps) {
   const clamped = Math.min(known, wordCount);
   const percent = wordCount > 0 ? Math.round((clamped / wordCount) * 100) : 0;
@@ -40,7 +50,10 @@ export function DeckHeader({
           <DeckIcon name={icon} className="size-6 stroke-[1.5]" />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-2xl leading-tight font-semibold tracking-tight">
+          <h1
+            ref={nameRef}
+            className="font-heading text-2xl leading-tight font-semibold tracking-tight"
+          >
             {name}
           </h1>
           <p className="text-sm text-muted-foreground">
