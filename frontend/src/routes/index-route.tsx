@@ -1,11 +1,12 @@
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { DeckGrid, DeckGridSkeleton } from "@/features/decks/deck-grid";
 import { useManifest, useSyncData } from "@/lib/data/queries";
 import { cn } from "@/lib/utils";
+
+import { MainHeader } from "./main-tabs";
 
 /** The deck overview. Renders entirely from the manifest. */
 export function OverviewPage() {
@@ -26,26 +27,19 @@ export function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          {/* Below 40px the glyph pair stops being legible, so the header wears
-              the reduced mark. It has the word "Decks" beside it and does not
-              need to carry the name on its own. */}
-          <Mark className="size-9 shrink-0 text-primary" />
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Decks
-          </h1>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          aria-label="Refresh decks"
-          disabled={sync.isPending}
-          onClick={handleSync}
-        >
-          <RefreshCwIcon className={cn(sync.isPending && "animate-spin")} />
-        </Button>
-      </header>
+      <MainHeader
+        action={
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            aria-label="Refresh decks"
+            disabled={sync.isPending}
+            onClick={handleSync}
+          >
+            <RefreshCwIcon className={cn(sync.isPending && "animate-spin")} />
+          </Button>
+        }
+      />
 
       {decks ? (
         decks.length > 0 ? (

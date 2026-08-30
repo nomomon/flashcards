@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useSpeakOnFlip } from "@/lib/audio/speak-on-flip";
 import { useSpeak } from "@/lib/audio/use-speech";
 import { useRateWord } from "@/lib/progress/queries";
+import { useRecordAnswer } from "@/lib/stats/queries";
 import { shuffle } from "@/lib/utils";
 import type { Deck } from "@/types/deck";
 import type { DeckProgress } from "@/types/progress";
@@ -35,8 +36,8 @@ interface StudyRunnerProps {
  * learner's finger.
  *
  * Every verdict - swipe, button or arrow key - goes through `handleRate`, so
- * there is one place that decides what a rating does and one direction the card
- * flies.
+ * there is one place that decides what a rating does, one direction the card
+ * flies, and one place the day's tally is kept.
  */
 export function StudyRunner({
   deck,
@@ -48,6 +49,7 @@ export function StudyRunner({
   onResetProgress,
 }: StudyRunnerProps) {
   const { mutate: rateWord } = useRateWord(deck.id);
+  const { mutate: recordAnswer } = useRecordAnswer();
   const { speak, isPlaying } = useSpeak();
   const { speakOnFlip, setSpeakOnFlip } = useSpeakOnFlip();
 
@@ -101,8 +103,14 @@ export function StudyRunner({
           onError: () => toast.error("Could not save that answer"),
         },
       );
+      // Tallied here rather than inside `useRateWord`, so the two stores stay
+      // independent: progress is the state of a word, statistics are a count of
+      // what happened today, and neither needs to know the other exists. This
+      // is already the one place a verdict is decided, so there is no second
+      // path a rating could take that would miss it.
+      recordAnswer({ known });
     },
-    [current, rateWord],
+    [current, rateWord, recordAnswer],
   );
 
   const isFlipped = current !== undefined && flippedKey === current.wordId;

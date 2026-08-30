@@ -102,6 +102,21 @@ Per-device, in `localStorage`, under `flashcards:progress:v1:<deckId>` — one
 accounts, so progress does not follow you between devices. That is a deliberate
 trade for having no backend to run.
 
+The **Stats** tab keeps a second, separate record under
+`flashcards:stats:v1`: one bucket per calendar day holding time spent and how
+many answers fell each way. It is aggregate-only (no word ids, no per-answer
+log), so it says how much practice happened without becoming a weaker copy of
+progress, and a write prunes it to the last 400 days.
+
+"Time studied" counts only while the tab is visible and within 90 seconds of
+your last interaction, and no single tick can contribute more than the ten
+seconds it measures. A tab left open overnight therefore reports the minutes you
+were actually there, not the hours the tab was.
+
+Both records live only on the device that made them, and either can be erased
+from the app: progress on a deck's page, statistics at the bottom of the Stats
+tab.
+
 Deck data fetched from the network is cached through TanStack Query and persisted
 to `localStorage`, which is what lets the app open and work offline once a deck
 has been visited.

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 interface ResetProgressButtonProps {
   isResetting: boolean;
   onReset: () => void;
+  label?: string;
+  armedLabel?: string;
 }
 
 /** How long an armed button stays armed before it forgets it was tapped. */
@@ -16,10 +18,16 @@ const ARMED_MS = 5000;
  * button arms first and resets second. Two taps rather than a modal: there is no
  * dialog primitive in this app yet, and a confirmation step that lives in the
  * button itself needs no focus trap, no scroll lock and no second component.
+ *
+ * The labels are props so the stats page can reuse the arming behaviour for
+ * erasing its own record. What is being wiped changes; needing two taps to wipe
+ * it does not.
  */
 export function ResetProgressButton({
   isResetting,
   onReset,
+  label = "Reset progress",
+  armedLabel = "Tap again to erase progress",
 }: ResetProgressButtonProps) {
   const [armed, setArmed] = useState(false);
 
@@ -49,7 +57,7 @@ export function ResetProgressButton({
       onClick={handleClick}
     >
       <TrashIcon />
-      {armed ? "Tap again to erase progress" : "Reset progress"}
+      {armed ? armedLabel : label}
     </Button>
   );
 }

@@ -9,12 +9,14 @@ import { STUDY_DIRECTIONS } from "@/features/study/directions";
 import { DeckPage } from "@/routes/deck-route";
 import { OverviewPage } from "@/routes/index-route";
 import { NotFoundPage, RootLayout, RouteErrorPage } from "@/routes/root-layout";
+import { StatsPage } from "@/routes/stats-route";
 import { StudyPage } from "@/routes/study-route";
 
 /**
  * Route shape:
  *
  *   /                    the deck grid
+ *   /stats               time, answers and streaks, from local statistics
  *   /deck/$deckId        the deck's own page: word list, direction, start
  *   /deck/$deckId/study  the session
  *
@@ -70,6 +72,17 @@ const indexRoute = createRoute({
   component: OverviewPage,
 });
 
+/**
+ * A sibling route rather than a panel on the overview, so the tab bar the two
+ * share is real navigation: the back button works between them, and a glance at
+ * the numbers is a link someone can keep.
+ */
+const statsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/stats",
+  component: StatsPage,
+});
+
 const deckRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/deck/$deckId",
@@ -84,7 +97,12 @@ const studyRoute = createRoute({
   component: StudyPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, deckRoute, studyRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  statsRoute,
+  deckRoute,
+  studyRoute,
+]);
 
 export const router = createRouter({
   routeTree,

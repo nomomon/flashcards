@@ -4,6 +4,7 @@ import { HomeIcon, RotateCcwIcon, TriangleAlertIcon } from "lucide-react";
 
 import { buildLabel, commitUrl } from "@/build-info";
 import { Button } from "@/components/ui/button";
+import { useTimeOnTask } from "@/lib/stats/use-time-on-task";
 
 /**
  * The one page shell: mobile-first, centred, same padding on every route.
@@ -21,6 +22,12 @@ import { Button } from "@/components/ui/button";
  * which keeps this out of the scroll chain entirely.
  */
 export function RootLayout() {
+  // Mounted once, at the root, so "time spent" means time in the app rather
+  // than time on the study screen - reading a deck's word list is studying too.
+  // It counts only while the tab is visible and recently interacted with; see
+  // the hook for why that matters.
+  useTimeOnTask();
+
   return (
     <div className="min-h-dvh overflow-x-clip bg-background">
       <main className="mx-auto max-w-3xl px-4 pt-8">

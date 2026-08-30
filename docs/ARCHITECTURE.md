@@ -13,6 +13,7 @@ routes/            URL shape, search-param validation, page composition
    ↓
 features/          domain UI, grouped by the thing it serves
    ├── decks/      browsing, previewing and configuring a deck
+   ├── stats/      what the day buckets mean, and how they are drawn
    └── study/      running a study session
    ↓
 components/        rich-text.tsx, plus ui/ design-system primitives
@@ -22,6 +23,7 @@ lib/               the only layer that talks to the network or localStorage
    ├── data/       remote deck data: fetch, parse TSV, validate, cache
    ├── markup/     the inline-formatting parser and its plain-text projection
    ├── progress/   local learner progress: read, write, cache
+   ├── stats/      local study statistics: day buckets, and the clock
    ├── audio/      clip playback
    └── query/      TanStack Query client + persistence wiring
    ↓
@@ -135,6 +137,22 @@ export interface DeckProgress {
 }
 ```
 
+`types/stats.ts`
+
+```ts
+export interface DayStats {
+  ms: number;
+  correct: number;
+  incorrect: number;
+}
+
+export interface StudyStats {
+  schemaVersion: number;
+  /** Keyed by local calendar day, `YYYY-MM-DD`. */
+  days: Record<string, DayStats>;
+}
+```
+
 `types/session.ts`
 
 ```ts
@@ -221,6 +239,53 @@ export function useResetDeckProgress(
 ): UseMutationResult<DeckProgress, Error, void>;
 ```
 
+## `lib/stats/` - local study statistics
+
+The same shape as `lib/progress/`, for a different question: progress is the
+*state* of each word, statistics are a *count of what happened*. They are
+separate stores, and neither knows the other exists.
+
+Storage key: `flashcards:stats:v1`, holding one bucket per local calendar day.
+
+```ts
+export function readStats(): StudyStats;
+export function writeStats(stats: StudyStats): void;
+export function clearStats(): void;
+export function dayKey(date: Date): string; // local, not UTC
+export function addTime(stats: StudyStats, ms: number, date?: Date): StudyStats;
+export function addAnswer(stats: StudyStats, known: boolean, date?: Date): StudyStats;
+
+export function useStats(): UseQueryResult<StudyStats>;
+export function useRecordAnswer(): UseMutationResult<StudyStats, Error, { known: boolean }>;
+export function useRecordTime(): UseMutationResult<StudyStats, Error, { ms: number }>;
+export function useResetStats(): UseMutationResult<StudyStats, Error, void>;
+
+/** Mounted once, in the root layout. */
+export function useTimeOnTask(): void;
+```
+
+Three rules define the store, and they are why this is not a few more fields on
+`DeckProgress`:
+
+- **Aggregates only.** A day holds milliseconds and two verdict counts. Nothing
+  is keyed by word, so the record cannot become a second, weaker copy of
+  progress - and unlike progress, a per-answer log would grow forever.
+- **Local calendar days.** Every figure on the page is a sum or a ratio over
+  whole days, and a streak has to agree with the calendar the learner is looking
+  at, so `dayKey` is built from local date parts rather than `toISOString()`.
+- **Bounded.** Writes prune to the most recent 400 days.
+
+`use-time-on-task.ts` is the only clock. It counts only while the tab is
+visible and within 90 seconds of the last interaction, and caps each tick's
+contribution to twice the tick interval, so a throttled timer or an overnight
+tab cannot inflate the figure. It is mounted at the root, which is what makes
+"time studied" mean time in the app rather than time on the study screen.
+
+Answers are tallied in `StudyRunner`'s `handleRate` rather than inside
+`useRateWord`. That keeps the two stores independent, and `handleRate` is
+already the single place a verdict is decided, so no rating can take a path that
+misses it.
+
 ## `lib/query/` — client and persistence
 
 `client.ts` exports `createQueryClient()`. `provider.tsx` exports
@@ -287,7 +352,15 @@ Code-based TanStack Router route tree (no codegen). Two routes:
 | Path    | Search params                                                                         |
 | ------- | ------------------------------------------------------------------------------------- |
 | `/`     | none                                                                                  |
+| `/stats`| none                                                                                  |
 | `/deck` | `deckId: string`, `tags?: string[]`, `direction: StudyDirection` (default front-to-back) |
+
+`/` and `/stats` are siblings sharing the header and tab bar in
+`routes/main-tabs.tsx` - real navigation rather than a panel, so the back button
+works between them and a glance at the numbers is a link. That file sits in
+`routes/` because it is page composition that knows the route tree and nothing
+about decks or statistics; a feature folder holding one navigation component
+would exist to satisfy a rule rather than to hold a domain.
 
 Search params are validated with zod in `validateSearch`, so a hand-edited URL
 produces a typed default rather than a runtime crash. Study options live in the

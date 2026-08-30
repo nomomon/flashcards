@@ -31,19 +31,27 @@ export const progressKeys = {
 };
 
 /**
+ * Exported as options as well as a hook, because the stats page needs one
+ * query per deck and so has to build a variable-length list of them with
+ * `useQueries` - which takes options, not hooks.
+ *
  * Reads progress once, synchronously, via `initialData` - so a card never
  * renders a loading state for its own progress - and then serves whatever the
  * mutations below write into the cache.
  */
-export function useDeckProgress(deckId: string): UseQueryResult<DeckProgress> {
-  return useQuery({
+export function deckProgressQueryOptions(deckId: string) {
+  return {
     queryKey: progressKeys.deck(deckId),
     queryFn: () => readDeckProgress(deckId),
     initialData: () => readDeckProgress(deckId),
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
-    networkMode: "always",
-  });
+    networkMode: "always" as const,
+  };
+}
+
+export function useDeckProgress(deckId: string): UseQueryResult<DeckProgress> {
+  return useQuery(deckProgressQueryOptions(deckId));
 }
 
 /**
