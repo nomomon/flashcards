@@ -121,6 +121,41 @@ has been visited.
 both record that domain. The SPA is served with a `404.html` copy of
 `index.html`, which is how client-side routes survive a hard refresh.
 
+## Where the decks come from
+
+By default, from this repo: `data/` is copied into the build and served
+same-origin at `/data`. Clone, `pnpm dev`, and you are looking at the decks
+committed here, with nothing to configure.
+
+`VITE_DATA_BASE_URL` overrides that with any absolute URL, and the deployed site
+uses it to read decks published from somewhere else — they live in a separate
+private repo, because the study material they are transcribed from cannot sit in
+a public one. The decks themselves are published to an ordinary public URL; what
+is private is the repo, not the address.
+
+In CI the value comes from the repository variable `DATA_BASE_URL`
+(Settings → Secrets and variables → Actions → Variables). It is a variable
+rather than a secret on purpose: Vite inlines it into the public bundle, so it
+could not be kept secret, and it decides where the app looks rather than who may
+look. Unset it and everything falls back to the decks committed here, which is
+what makes a fork deploy a working site.
+
+Three things follow the same value, so there is one answer rather than three:
+the app's fetches (`lib/data/source.ts`), the service worker's caching rules
+(`vite.config.ts`), and whether `postbuild.mjs` copies a local `data/` into the
+build at all — it stops when the base is remote, so a stale local set can never
+be published beside the one actually in use.
+
+A remote host must send `Access-Control-Allow-Origin`; GitHub Pages does for
+every static file.
+
+To run the data tools against decks kept elsewhere, point `FLASHCARDS_DATA_DIR`
+at that folder:
+
+```bash
+FLASHCARDS_DATA_DIR=/path/to/data pnpm data:validate
+```
+
 ## Pronunciation
 
 Both sides of a word can be read aloud through the browser's own

@@ -159,7 +159,8 @@ three components deep.
 `source.ts`
 
 ```ts
-export const DATA_BASE_URL: string; // VITE_DATA_BASE_URL ?? "/data"
+export const DATA_BASE_URL: string; // VITE_DATA_BASE_URL, else "/data"
+export function normalizeDataBaseUrl(configured: string | undefined): string;
 export function dataUrl(relativePath: string): string;
 export function fetchManifest(): Promise<Manifest>; // cache: "no-store"
 export function fetchDeck(summary: Pick<DeckSummary, "path">): Promise<Deck>;

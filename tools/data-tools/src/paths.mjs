@@ -7,12 +7,26 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export const REPO_ROOT = path.resolve(here, "..", "..", "..");
-export const DATA_DIR = path.join(REPO_ROOT, "data");
+
+/**
+ * The `data/` folder these tools read and write.
+ *
+ * Normally this repo's own, but FLASHCARDS_DATA_DIR overrides it so the same
+ * validator and manifest builder can run against decks kept somewhere else -
+ * which is the point of VITE_DATA_BASE_URL existing at all. One copy of the
+ * contract, wherever the decks live.
+ */
+export const DATA_DIR = process.env.FLASHCARDS_DATA_DIR
+  ? path.resolve(process.env.FLASHCARDS_DATA_DIR)
+  : path.join(REPO_ROOT, "data");
 export const BANKS_DIR = path.join(DATA_DIR, "banks");
 export const LIBRARY_PATH = path.join(DATA_DIR, "library.json");
 export const MANIFEST_PATH = path.join(DATA_DIR, "manifest.json");
 
-/** Path relative to the repo root, for readable log lines. */
+/**
+ * Path for readable log lines: relative to whatever contains `data/`, so a
+ * message reads `data/banks/dutch-1.tsv` no matter which checkout it came from.
+ */
 export function rel(absolutePath) {
-  return path.relative(REPO_ROOT, absolutePath);
+  return path.relative(path.dirname(DATA_DIR), absolutePath);
 }

@@ -39,10 +39,24 @@ jobs:
       - name: Validate data
         run: pnpm data:validate
 
-      # Produces frontend/dist, including a copy of data/, 404.html, .nojekyll
-      # (postbuild.mjs) and everything in frontend/public (Vite).
+      # Produces frontend/dist, including 404.html, .nojekyll (postbuild.mjs)
+      # and everything in frontend/public (Vite).
+      #
+      # DATA_BASE_URL is a repository variable, not a secret: it is inlined into
+      # the public bundle, so it could not be one. Unset it and the whole thing
+      # falls back to same-origin /data, which is this repo's own data/ copied
+      # into the build - so a fork, or this repo before the variable exists,
+      # deploys a working site with the decks it ships with. Point it at an
+      # absolute URL and the deployed app reads decks published from there
+      # instead, and postbuild.mjs stops copying the local set so the two can
+      # never be confused for each other.
+      #
+      # Whatever it points at must send Access-Control-Allow-Origin (GitHub
+      # Pages does) or every fetch fails in the browser.
       - name: Build
         run: pnpm build
+        env:
+          VITE_DATA_BASE_URL: ${{ vars.DATA_BASE_URL }}
 
       # The custom domain lives in frontend/public/CNAME and reaches dist via
       # Vite's public dir. Losing it points flashcards.nomomon.xyz at nothing,

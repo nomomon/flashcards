@@ -32,6 +32,11 @@ so in production these live at `https://flashcards.nomomon.xyz/data/...` and in
 dev at `http://localhost:3000/data/...`. The frontend resolves the base from
 `import.meta.env.VITE_DATA_BASE_URL`, defaulting to `/data`.
 
+That base may also be an absolute URL, in which case these files are served from
+another origin entirely and this repo's `data/` is example data. The contract is
+the same either way, and so are the tools: `FLASHCARDS_DATA_DIR` points them at
+a `data/` outside this repo. See "Where the decks come from" in the README.
+
 ## `library.json` (authored)
 
 ```json

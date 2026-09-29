@@ -9,19 +9,47 @@ import { bankRowSchema, DATA_SCHEMA_VERSION, manifestSchema } from "./schemas";
  */
 
 /**
- * Where `data/` is served from. Same-origin `/data` by default, which is what
- * `vite dev` serves and what `scripts/postbuild.mjs` copies into `dist/data`.
+ * Same-origin `/data` unless told otherwise: that is what `vite dev` serves and
+ * what `scripts/postbuild.mjs` copies into `dist/data`, so a clone of this repo
+ * runs against the decks it ships with and nothing has to be configured.
  */
-export const DATA_BASE_URL: string =
+const DEFAULT_DATA_BASE_URL = "/data";
+
+/**
+ * Normalizes a configured base into one without a trailing slash.
+ *
+ * Empty is treated as unset, which is not pedantry: `VITE_DATA_BASE_URL:
+ * ${{ vars.DATA_BASE_URL }}` in a workflow expands to the empty string when the
+ * variable does not exist, and `?? "/data"` would happily accept it and then
+ * request `/manifest.json` from the site root.
+ */
+export function normalizeDataBaseUrl(configured: string | undefined): string {
+  const trimmed = (configured ?? "").trim().replace(/\/+$/, "");
+  return trimmed === "" ? DEFAULT_DATA_BASE_URL : trimmed;
+}
+
+/**
+ * Where `data/` is served from.
+ *
+ * An absolute `https://...` base is supported and is how the deployed site can
+ * read decks published from somewhere other than this repo. It is inlined into
+ * the bundle at build time, so it is public whatever it points at - it decides
+ * where the app looks, never who may look.
+ *
+ * `vite.config.ts` resolves the same value to build the service worker's
+ * caching rules, and `scripts/postbuild.mjs` to decide whether copying a local
+ * `data/` into the build still makes sense. The rule those three share is the
+ * one `normalizeDataBaseUrl` states.
+ */
+export const DATA_BASE_URL: string = normalizeDataBaseUrl(
   // The `?.` is what keeps this module importable outside a bundler - a node
   // script exercising the parser has no `import.meta.env` to read.
-  import.meta.env?.VITE_DATA_BASE_URL ?? "/data";
+  import.meta.env?.VITE_DATA_BASE_URL,
+);
 
 /** Resolves a path relative to `data/` (as found in the manifest). */
 export function dataUrl(relativePath: string): string {
-  const base = DATA_BASE_URL.replace(/\/+$/, "");
-  const path = relativePath.replace(/^\/+/, "");
-  return `${base}/${path}`;
+  return `${DATA_BASE_URL}/${relativePath.replace(/^\/+/, "")}`;
 }
 
 /** A fetch that came back, but not with a 2xx. Carries the status for callers. */
