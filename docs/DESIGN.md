@@ -12,18 +12,45 @@ before it says anything else, which is the one job an app icon has here.
 `frontend/public/mark.svg` is the source; `frontend/src/components/mark.tsx` is
 the same geometry as a component.
 
-Two halves to how it is built, and the split is deliberate:
+Two halves to how it is built, and the split is deliberate.
 
-- **The bubble is drawn.** A circle at `cx 47.41, cy 47.41, r 47.41`, plus a
-  tail. Tracing it from the source raster left a visibly torn outline, because
-  the source was a small image with antialiased edges. A circle is a circle.
-- **The continents are traced.** They are organic, so they were extracted from
-  the source at 72px, simplified with Ramer-Douglas-Peucker at `ε 0.85`, and
-  smoothed through a closed Catmull-Rom spline at tension `0.16`. That is why
-  the coastlines read as coastlines rather than as a staircase.
+**The bubble and its tail are drawn.** The circle is `cx 47.4, cy 47.4, r 47.4`.
+Tracing it from the source raster left a visibly torn outline, and a
+speech-bubble tail wants a crisp point that any smoothing filter rounds into a
+fin. Drawn does not mean guessed, though: the tail's three anchors are measured
+off the source silhouette.
+
+| Anchor | Value | What it is |
+| --- | --- | --- |
+| root A | `114.4°` | where the tail leaves the circle, lower side |
+| root B | `136.1°` | where it leaves, upper side |
+| tip | `(9.74, 99.35)` | the silhouette's farthest cell from the centre |
+
+Because both roots sit exactly on the circle, the chord closing the tail falls
+inside the disc and the union has no seam.
+
+**The continents are traced**, because coastlines are the one part that should
+not look drawn. Sampled at 96px, then:
+
+1. **Resample** the pixel staircase at uniform arc length.
+2. **Gaussian** along the contour, wrapped. This is the step that matters:
+   simplification alone only removes points, it never removes the steps.
+   Ramer-Douglas-Peucker on its own left visible stair edges.
+3. **Decimate**, then fit a closed Catmull-Rom spline at tension `0.16`.
+
+Shapes under 28 square units are dropped, which is what keeps JPEG speckle in
+the source from becoming a sixth continent.
 
 The whole mark is then scaled to `0.9246` and centred, so the circle plus the
 tail sit inside the square with an even margin.
+
+### Sizing it beside text
+
+The globe is 87.65% of the mark's box, the rest being the margin and the tail's
+overhang. Matched to text, the box wants to be about **1.4x the cap height** of
+what it sits next to: at 1.8x the globe visibly dwarfs the word, at 1.2x the
+word dominates. In practice that is `size-7` (28px) beside the 24px/600 header,
+and 34px beside the 26px/500 domain in the social image.
 
 The mark carries its own colours rather than taking `currentColor`. There is no
 monochrome reduction of it that still says "languages", which is a real trade
