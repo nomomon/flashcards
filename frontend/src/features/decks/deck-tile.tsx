@@ -34,7 +34,7 @@ export function DeckTile({ deck }: { deck: DeckSummary }) {
       {/* The deck's own colour, not the brand's: the tile is the one large
           surface a deck owns, so the atmosphere here has to come from the data
           like every other hue on this screen does. */}
-      <div className="bloom bloom-deck bloom-fade" aria-hidden="true" />
+      <div className="bloom bloom-deck" aria-hidden="true" />
       <div className="pointer-events-none relative flex h-full flex-col justify-between gap-2 p-4">
         {/* The name takes the deck's accent so the title and the icon read as
             one object rather than a label sitting above a picture. Light mode

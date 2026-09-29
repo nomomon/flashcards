@@ -66,7 +66,7 @@ cannot.
   used as one, because a hue from a file cannot be given legible text by CSS:
 
   ```
-  --deck-surface: color-mix(in oklab, <deck> 12%, var(--card));
+  --deck-surface: color-mix(in oklab, <deck> 8%, var(--card));
   --deck-edge:    color-mix(in oklab, <deck> 30%, var(--border));
   --deck-accent:  color-mix(in oklab, <deck> 70%, var(--foreground));
   ```
@@ -141,12 +141,26 @@ Three placements, and no more:
 
 | Where | Whose colour | Why there |
 | --- | --- | --- |
-| Deck tiles | the deck's | The one large surface a deck owns. |
+| Deck tiles | the deck's | The one large surface a deck owns. No mask, 0.22. |
 | Study complete, stats empty state | the brand's | The app's only emotional beats. |
 | App icon, social image | the brand's | No text to sit behind. |
 
 `.bloom-fade` masks its own edge. Without it a clipped bloom reads as a coloured
 disc behind the content rather than as light coming off it.
+
+Deck tiles are the exception and take no fade at all. The mask holds full
+strength for 45% of the radius and is gone by the edge, which is what a bloom
+behind a score ring wants and the opposite of what a tile wants: across a square
+it lands as a hotspot in the middle with empty corners, and that jump from centre
+to edge is what made the tiles read heavy. `.bloom` already clips to the tile's
+rounded rect, so with no mask the tint simply fills it.
+
+Two other things were making the tiles heavier than they looked in code. The
+surface tint was 12%, now 8%. And the deck bloom took `--deck-accent` for one of
+its two stops, which is the deck mixed 70% toward the *foreground* - on a light
+tile that stop was a dark smudge under the artwork. Both stops are now the raw
+deck hue, at two positions, which is what makes it read as a wash rather than a
+blotch.
 
 ## Type
 

@@ -27,7 +27,7 @@ import type { CSSProperties } from "react";
 export function deckColorVars(color: string): CSSProperties {
   return {
     "--deck": color,
-    "--deck-surface": `color-mix(in oklab, ${color} 12%, var(--card))`,
+    "--deck-surface": `color-mix(in oklab, ${color} 8%, var(--card))`,
     "--deck-edge": `color-mix(in oklab, ${color} 30%, var(--border))`,
     "--deck-accent": `color-mix(in oklab, ${color} 70%, var(--foreground))`,
   } as CSSProperties;

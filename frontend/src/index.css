@@ -281,8 +281,26 @@
      scope - so the atmosphere is the deck's colour rather than the brand's, and
      the rule that hue belongs to data survives the rebrand. */
   .bloom-deck::before {
+    /*
+     * The deck's raw hue at both stops, and quieter than the brand bloom.
+     *
+     * It used to take `--deck-accent` for one stop, which is the deck mixed 70%
+     * toward the *foreground* - so on a light tile that stop was a dark smudge
+     * sitting under the artwork, and the tile read heavy and blotchy rather than
+     * tinted. One hue, two positions, is what makes it read as a wash.
+     */
     background:
-      radial-gradient(50% 60% at 26% 28%, var(--deck-accent), transparent 72%),
-      radial-gradient(56% 64% at 74% 76%, var(--deck), transparent 74%);
+      radial-gradient(52% 62% at 26% 28%, var(--deck), transparent 72%),
+      radial-gradient(58% 66% at 74% 76%, var(--deck), transparent 74%);
+    opacity: 0.22;
   }
+
+  /*
+   * Deck tiles deliberately take no `.bloom-fade`. That mask holds full strength
+   * for 45% of the radius and is gone by the edge, which is right behind a score
+   * ring and wrong across a tile: it lands as a hotspot in the middle with empty
+   * corners, and the jump from centre to edge is the thing that read as heavy.
+   * `.bloom` already clips to the tile's rounded rect, so with no mask the tint
+   * simply fills it and the wash stays even.
+   */
 }
