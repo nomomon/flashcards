@@ -60,7 +60,7 @@ export function listBankFiles() {
  * the parser ignores — changes it. That is intentional: the revision is a cache
  * key, and a cheap false invalidation beats a missed one.
  *
- * @param {string} id deck id, e.g. "dutch-1"
+ * @param {string} id deck id, e.g. "example"
  */
 export function loadBank(id) {
   const bank = bankRelativePath(id);

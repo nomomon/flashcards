@@ -232,7 +232,7 @@ export default defineConfig(({ mode }) => {
             }),
           ],
           // Client-side routes have no files behind them, so a navigation to
-          // /deck/dutch-4 has to resolve to the shell. Data requests are not
+          // /deck/example has to resolve to the shell. Data requests are not
           // navigations, but the denylist makes that explicit rather than
           // implied. It stays same-origin-shaped because a remote base is never
           // a navigation this worker sees.

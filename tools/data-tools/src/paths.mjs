@@ -25,7 +25,7 @@ export const MANIFEST_PATH = path.join(DATA_DIR, "manifest.json");
 
 /**
  * Path for readable log lines: relative to whatever contains `data/`, so a
- * message reads `data/banks/dutch-1.tsv` no matter which checkout it came from.
+ * message reads `data/banks/example.tsv` no matter which checkout it came from.
  */
 export function rel(absolutePath) {
   return path.relative(path.dirname(DATA_DIR), absolutePath);

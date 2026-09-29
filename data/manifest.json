@@ -2,9 +2,10 @@
   "schemaVersion": 2,
   "decks": [
     {
-      "id": "dutch-1",
-      "name": "Dutch",
-      "color": "#FF4F00",
+      "id": "example",
+      "name": "Example",
+      "color": "#4285F4",
+      "icon": "languages",
       "languages": {
         "front": {
           "label": "Dutch",
@@ -15,44 +16,8 @@
           "locale": "en-US"
         }
       },
-      "wordCount": 127,
-      "revision": "00ec2d83c0a5"
-    },
-    {
-      "id": "dutch-4",
-      "name": "Hoofdstuk 4: Reizen",
-      "color": "#0E7490",
-      "icon": "plane",
-      "languages": {
-        "front": {
-          "label": "Dutch",
-          "locale": "nl-NL"
-        },
-        "back": {
-          "label": "English",
-          "locale": "en-US"
-        }
-      },
-      "wordCount": 125,
-      "revision": "e2283554017a"
-    },
-    {
-      "id": "dutch-cafe",
-      "name": "Café & Restaurant",
-      "color": "#9F1239",
-      "icon": "utensils",
-      "languages": {
-        "front": {
-          "label": "Dutch",
-          "locale": "nl-NL"
-        },
-        "back": {
-          "label": "English",
-          "locale": "en-US"
-        }
-      },
-      "wordCount": 150,
-      "revision": "a2fc9b9ca13d"
+      "wordCount": 3,
+      "revision": "8ee7d310ad24"
     }
   ]
 }

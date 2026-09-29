@@ -44,9 +44,9 @@ a `data/` outside this repo. See "Where the decks come from" in the README.
   "schemaVersion": 2,
   "decks": [
     {
-      "id": "dutch-1",
-      "name": "Dutch",
-      "color": "#FF4F00",
+      "id": "example",
+      "name": "Example",
+      "color": "#4285F4",
       "icon": "languages",
       "languages": {
         "front": { "label": "Dutch", "locale": "nl-NL" },
@@ -184,15 +184,15 @@ Regenerate with `pnpm data:manifest`. Fetched on every app start
   "schemaVersion": 2,
   "decks": [
     {
-      "id": "dutch-1",
-      "name": "Dutch",
-      "color": "#FF4F00",
+      "id": "example",
+      "name": "Example",
+      "color": "#4285F4",
       "languages": {
         "front": { "label": "Dutch", "locale": "nl-NL" },
         "back": { "label": "English", "locale": "en-US" }
       },
-      "wordCount": 127,
-      "revision": "3ab8f10c92d4"
+      "wordCount": 3,
+      "revision": "8ee7d310ad24"
     }
   ]
 }
