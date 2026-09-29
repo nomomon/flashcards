@@ -44,20 +44,6 @@ export function bankAbsolutePath(id) {
   return path.join(DATA_DIR, bankRelativePath(id));
 }
 
-/**
- * True when a path from a generated file is safely relative to data/. Used for
- * audio clip paths, which are the only paths still written into a data file.
- */
-export function isSafeRelativePath(value) {
-  return (
-    typeof value === "string" &&
-    value !== "" &&
-    !path.isAbsolute(value) &&
-    !value.startsWith("/") &&
-    !value.split(/[\\/]/).includes("..")
-  );
-}
-
 /** `banks/<stem>.tsv` file names present on disk, sorted. */
 export function listBankFiles() {
   if (!fs.existsSync(BANKS_DIR)) return [];

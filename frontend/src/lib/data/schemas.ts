@@ -1,7 +1,5 @@
 import { z } from "zod";
 import type {
-  AudioClip,
-  AudioIndex,
   Deck,
   DeckLanguages,
   DeckSummary,
@@ -76,21 +74,6 @@ const slugId = z
 
 const nonEmptyText = z.string().min(1, "must not be empty");
 
-/** Path relative to `data/`. Never absolute, never escaping the directory. */
-const relativeDataPath = z
-  .string()
-  .min(1, "must not be empty")
-  .refine(
-    (value) =>
-      !value.startsWith("/") && !/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value),
-    {
-      message: "must be relative to data/, not absolute",
-    },
-  )
-  .refine((value) => !value.split("/").includes(".."), {
-    message: 'must not contain ".."',
-  });
-
 const languageInfoSchema = z.object({
   label: nonEmptyText,
   locale,
@@ -131,19 +114,6 @@ const deckSummarySchema = z.object({
 export const manifestSchema = z.object({
   schemaVersion,
   decks: z.array(deckSummarySchema),
-});
-
-const audioClipSchema = z.object({
-  path: relativeDataPath,
-  bytes: z.number().int().nonnegative(),
-});
-
-export const audioIndexSchema = z.object({
-  schemaVersion,
-  // locale -> voice name
-  voices: z.record(z.string(), nonEmptyText),
-  // `${locale}:${strippedText}` -> clip
-  clips: z.record(z.string(), audioClipSchema),
 });
 
 /**
@@ -189,10 +159,4 @@ export type DeckSummarySchemaMatches = Expect<
 >;
 export type ManifestSchemaMatches = Expect<
   Mutual<z.output<typeof manifestSchema>, Manifest>
->;
-export type AudioClipSchemaMatches = Expect<
-  Mutual<z.output<typeof audioClipSchema>, AudioClip>
->;
-export type AudioIndexSchemaMatches = Expect<
-  Mutual<z.output<typeof audioIndexSchema>, AudioIndex>
 >;

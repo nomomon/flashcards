@@ -4,23 +4,20 @@ Flashcards for language learning, living at
 **[flashcards.nomomon.xyz](https://flashcards.nomomon.xyz)**.
 
 There is no backend. The app is a static React SPA on GitHub Pages, and the decks
-are plain JSON files in this repo. Pronunciation audio is generated once by a
-GitHub Actions workflow and committed next to the decks, so the running app never
-calls an API and never needs a key.
+are plain files in this repo. Pronunciation is read aloud by the browser's own
+speech synthesis, so the running app never calls an API and never needs a key.
 
 ## Layout
 
 ```
 .
 ├── frontend/        Vite + React + TypeScript SPA (the whole app)
-├── data/            decks, and generated audio — the "database"
+├── data/            the "database"
 │   ├── library.json     authored: deck metadata
 │   ├── banks/*.tsv      authored: one word per line
-│   ├── manifest.json    generated: the above, plus derived fields
-│   └── audio/           generated: clips + lookup index
+│   └── manifest.json    generated: the above, plus derived fields
 ├── tools/
-│   ├── data-tools/  validate decks, rebuild the manifest
-│   └── audio-gen/   generate missing pronunciation audio via Gemini TTS
+│   └── data-tools/  validate decks, rebuild the manifest
 └── docs/
     ├── ARCHITECTURE.md   how the frontend is layered, and why
     ├── DATA_CONTRACT.md  the exact shape of everything in data/
@@ -54,7 +51,6 @@ and production read data through identical URLs.
 | `pnpm typecheck`     | `tsc --noEmit`                                           |
 | `pnpm data:validate` | Check `data/` against the contract                       |
 | `pnpm data:manifest` | Rebuild `data/manifest.json` from `library.json` + banks  |
-| `pnpm data:audio`    | Generate missing pronunciation audio (needs a Gemini key)|
 
 Biome replaces both Prettier and ESLint here; a Husky pre-commit hook runs it on
 staged files. Nothing bumps `package.json`'s version: the deployed build is
@@ -82,18 +78,15 @@ There is no `revision` to bump: it is a content hash of the bank file, computed
 by `data:manifest`, so a browser notices a stale cache on its own.
 
 `front` and `back` accept a little inline formatting — `**bold**`, `*italic*`,
-`__underline__` — which is stripped before text-to-speech, so adding emphasis
-never regenerates audio.
+`__underline__` — which is stripped before text-to-speech, so emphasis is never
+pronounced.
 
 Tabs are the separator because commas are everywhere in this content ("well,
 fine", tag lists, `alsjeblieft (a.u.b.)`) and tabs are nowhere, which means no
 quoting rules to get wrong. One word is one line, so diffs stay readable and
 appending is safe.
 
-Pushing then does two things on its own: the site redeploys, and the audio
-workflow generates clips for any words that do not have one yet and commits them
-back. Deleting `data/audio/` and re-running the workflow repopulates it from
-scratch.
+Pushing is all it takes: the site redeploys on its own.
 
 ## How progress is stored
 
@@ -128,14 +121,12 @@ has been visited.
 both record that domain. The SPA is served with a `404.html` copy of
 `index.html`, which is how client-side routes survive a hard refresh.
 
-## Audio generation
+## Pronunciation
 
-`tools/audio-gen` asks Gemini TTS for each word it has not voiced yet, encodes
-the result to Opus in Ogg (mono, ~16 kbps — a few KB per word) and records it in
-`data/audio/index.json`. It is incremental and idempotent: existing clips are
-skipped, missing files are regenerated, and clips whose text no longer appears in
-any deck are pruned. Running it needs a `GEMINI_API_KEY`; the deployed app does
-not. See [`tools/audio-gen/README.md`](tools/audio-gen/README.md).
+Both sides of a word can be read aloud through the browser's own
+`speechSynthesis`, in the deck's language for that side. There is nothing to
+generate and no key to hold: a device that has a voice for the locale gets the
+buttons, and a device that does not simply never sees them.
 
 ## License
 

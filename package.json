@@ -2,7 +2,7 @@
   "name": "flashcards",
   "private": true,
   "version": "1.0.0",
-  "description": "Flashcards for language learning. Static frontend on GitHub Pages, decks and generated audio as plain files in data/.",
+  "description": "Flashcards for language learning. Static frontend on GitHub Pages, decks as plain files in data/.",
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "pnpm --filter @flashcards/frontend dev",
@@ -15,7 +15,6 @@
     "typecheck": "pnpm --filter @flashcards/frontend typecheck",
     "data:validate": "pnpm --filter @flashcards/data-tools validate",
     "data:manifest": "pnpm --filter @flashcards/data-tools manifest",
-    "data:audio": "pnpm --filter @flashcards/audio-gen generate",
     "prepare": "husky"
   },
   "devDependencies": {

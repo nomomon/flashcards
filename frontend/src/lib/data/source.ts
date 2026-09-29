@@ -1,22 +1,11 @@
 import type { z } from "zod";
-import type {
-  AudioIndex,
-  Deck,
-  DeckSummary,
-  Manifest,
-  Word,
-} from "@/types/deck";
-import {
-  audioIndexSchema,
-  bankRowSchema,
-  DATA_SCHEMA_VERSION,
-  manifestSchema,
-} from "./schemas";
+import type { Deck, DeckSummary, Manifest, Word } from "@/types/deck";
+import { bankRowSchema, DATA_SCHEMA_VERSION, manifestSchema } from "./schemas";
 
 /**
  * The one place that talks to the network. Everything fetched here is validated
  * before it leaves this module, so the rest of the app can treat
- * `Manifest`/`Deck`/`AudioIndex` as facts.
+ * `Manifest`/`Deck` as facts.
  */
 
 /**
@@ -28,7 +17,7 @@ export const DATA_BASE_URL: string =
   // script exercising the parser has no `import.meta.env` to read.
   import.meta.env?.VITE_DATA_BASE_URL ?? "/data";
 
-/** Resolves a path relative to `data/` (as found in the manifest or audio index). */
+/** Resolves a path relative to `data/` (as found in the manifest). */
 export function dataUrl(relativePath: string): string {
   const base = DATA_BASE_URL.replace(/\/+$/, "");
   const path = relativePath.replace(/^\/+/, "");
@@ -127,10 +116,6 @@ export function bankUrl(deckId: string): string {
   return dataUrl(`banks/${deckId}.tsv`);
 }
 
-export function fetchAudioIndex(): Promise<AudioIndex> {
-  return fetchJson(dataUrl("audio/index.json"), audioIndexSchema);
-}
-
 /**
  * A deck's words come from its TSV bank. A bank at a given revision is
  * immutable, so the HTTP cache is welcome to help here.
@@ -168,8 +153,8 @@ function parseTagCell(cell: string): string[] {
  * The format makes quoting impossible to get wrong: no field may contain a tab
  * or a newline, so a data line is exactly `split("\t")` and there is no quoted
  * field mode. The rules below are the contract (`docs/DATA_CONTRACT.md`), shared
- * with `tools/data-tools` and `tools/audio-gen`, each of which carries its own
- * parser so that neither workspace has to depend on the other:
+ * with `tools/data-tools`, which carries its own parser so that neither
+ * workspace has to depend on the other:
  *
  * - Columns are addressed by header **name**, so reordering columns changes
  *   nothing and unknown columns are ignored - which is what lets a column be
@@ -178,9 +163,9 @@ function parseTagCell(cell: string): string[] {
  *   means no non-whitespace character; a comment's first non-whitespace
  *   character is `#`.
  * - Header cells are trimmed and must be unique. Field values are **not**
- *   trimmed: a trailing space in `front` is data, and eating it would change the
- *   audio key. Individual tags are trimmed, since `a, b` is how a list is
- *   written.
+ *   trimmed: a trailing space in `front` is data, and eating it would change
+ *   what the card says. Individual tags are trimmed, since `a, b` is how a list
+ *   is written.
  * - A row may omit trailing **optional** columns: `ik⇥ik⇥I` means no tags, just
  *   as `ik⇥ik⇥I⇥` does. Omitting a required column is an error, and so is a row
  *   with more fields than the header - that is a stray tab, which silently

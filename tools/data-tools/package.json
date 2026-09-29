@@ -9,7 +9,6 @@
   },
   "scripts": {
     "validate": "node src/validate.mjs",
-    "manifest": "node src/build-manifest.mjs",
-    "migrate": "node src/migrate-v1-to-v2.mjs"
+    "manifest": "node src/build-manifest.mjs"
   }
 }

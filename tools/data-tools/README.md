@@ -14,7 +14,6 @@ from `process.cwd()`, so the commands behave identically from any directory.
 | `data/library.json`     | authored  | a human or an AI     |
 | `data/banks/<id>.tsv`   | authored  | a human or an AI     |
 | `data/manifest.json`    | generated | `build-manifest.mjs` |
-| `data/audio/index.json` | generated | `tools/audio-gen`    |
 
 Nothing derived lives in an authored file, so nothing in an authored file can go
 stale. Everything derived is a pure function of those files.
@@ -24,8 +23,7 @@ stale. Everything derived is a pure function of those files.
 | Command            | What it does                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------- |
 | `npm run manifest` | Regenerates `data/manifest.json` from `library.json` + `banks/*.tsv`. Byte-idempotent. |
-| `npm run validate` | Checks `data/` against all seven contract invariants. Exits 1 on any error.            |
-| `npm run migrate`  | One-shot schema 1 -> 2 migration. One-shot schema 1 -> 2 migration; no-ops now that schema 1 is gone.                   |
+| `npm run validate` | Checks `data/` against all six contract invariants. Exits 1 on any error.             |
 
 From the repo root: `pnpm data:manifest`, `pnpm data:validate`. Or directly, from
 anywhere:
@@ -57,13 +55,12 @@ its bank file's bytes, so editing the bank changes the cache key automatically.
 | `slug.mjs`           | Word-id rules.                                                              |
 | `library.mjs`        | Loads `library.json` and banks; derives bank paths; revision hashing.        |
 | `build-manifest.mjs` | Generates `manifest.json`.                                                  |
-| `validate.mjs`       | Enforces the seven invariants.                                              |
-| `migrate-v1-to-v2.mjs` | The schema 1 -> 2 migration, kept for auditability.                        |
+| `validate.mjs`       | Enforces the six invariants.                                                |
 
 `tsv.mjs` and `markup.mjs` are marked *reference* because the frontend data layer
-and the audio generator each carry their own implementation of the same two
-formats. Their doc comments spell out every edge case; treat those comments as
-part of the contract and change all three together.
+carries its own implementation of the same two formats. Their doc comments spell
+out every edge case; treat those comments as part of the contract and change both
+copies together.
 
 ## TSV rules worth remembering
 
@@ -75,8 +72,8 @@ part of the contract and change all three together.
   the parser and the serializer refuse rather than invent one.
 - Blank lines and lines whose first non-space character is `#` are skipped, so a
   bank can be commented and grouped. A line of only tabs counts as blank.
-- Field values are **not** trimmed (a trailing space in `front` would change the
-  audio key); header cells and individual tags are.
+- Field values are **not** trimmed (a trailing space in `front` is data); header
+  cells and individual tags are.
 - **A row may omit trailing optional columns.** `ik⇥ik⇥I` is valid and means no
   tags, exactly as `ik⇥ik⇥I⇥` does — forgetting the final tab is the likeliest
   hand-edit slip there is, and it is unambiguous. Omitting a *required* column is
@@ -114,10 +111,9 @@ that list here is exactly the cross-tool duplication schema 2 exists to remove.
 `front` and `back` may use `**bold**`, `*italic*`, `__underline__`, with `\*`,
 `\_`, `\\` escapes and free nesting. Everything else is literal text.
 
-`stripFormatting()` is what audio clips are keyed on
-(`${locale}:${strippedText}`), so it must be reproducible character for
-character. Three deliberate deviations from markdown, all documented in
-`markup.mjs`:
+`stripFormatting()` is what the app hands to speech synthesis, so it must be
+reproducible character for character. Three deliberate deviations from markdown,
+all documented in `markup.mjs`:
 
 - A lone `_` is never a delimiter (only `__` is).
 - There are no flanking rules: `a * b * c` really does italicise " b ".
@@ -129,11 +125,11 @@ character. Three deliberate deviations from markdown, all documented in
   bold-italic shorthand — nest explicitly: `**a *b* c**`.
 
 This is not CommonMark's delimiter-run algorithm, which would pull the leftover
-*inside* the element. Whole-token matching is the rule three implementations can
+*inside* the element. Whole-token matching is the rule both implementations can
 reproduce, which matters more here than being principled about text nobody
 writes: `stripFormatting` is differentially fuzzed against
-`tools/audio-gen/src/format.mjs` and `frontend/src/lib/markup/strip.ts`, and that
-corpus must show **zero** mismatches or audio clips silently orphan.
+`frontend/src/lib/markup/strip.ts`, and that corpus must show **zero**
+mismatches, or a deck passes validation and then renders its own delimiters.
 
 An unbalanced delimiter is **never an error** — it renders literally, and
 `validate` reports it as a warning, as it does a run of 3+ delimiters. Data must

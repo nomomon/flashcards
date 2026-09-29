@@ -46,9 +46,9 @@ interface WordListProps {
  *
  * Both sides of a row can be played, each in its own language: one button per
  * column, not one per row. Hearing the translation is as useful as hearing the
- * term, and a single button would have to pick one. Missing audio is silent by
- * design - `useSpeak` falls back to speech synthesis and otherwise does nothing,
- * since a clip that has not been generated yet is a normal state, not an error.
+ * term, and a single button would have to pick one. A missing voice is silent
+ * by design - `useSpeak` does nothing when the device has no voice for the
+ * locale, which is a normal state, not an error.
  */
 export function WordList({ words, languages, direction }: WordListProps) {
   const { from, to } = directionEndpoints(languages, direction);

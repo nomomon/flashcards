@@ -1,7 +1,7 @@
 // Reference implementation of the TSV word-bank rules in
-// docs/DATA_CONTRACT.md ("banks/<deckId>.tsv"). The frontend data layer and the
-// audio generator each carry their own parser for the same format, so the edge
-// cases below are the contract, not implementation detail. Keep them in sync.
+// docs/DATA_CONTRACT.md ("banks/<deckId>.tsv"). The frontend data layer carries
+// its own parser for the same format, so the edge cases below are the contract,
+// not implementation detail. Keep the two in sync.
 //
 // The format exists to make quoting impossible to get wrong: a data line is
 // exactly `line.split("\t")` and there is no quoted-field mode. The price is
@@ -21,7 +21,7 @@
 //   - Header cells are trimmed of surrounding whitespace; duplicate header
 //     names are an error because "address by name" would be ambiguous.
 //   - Field values are NOT trimmed: a trailing space in `front` is data, and
-//     silently eating it would change the audio key. Individual tags *are*
+//     silently eating it would change what the card says. Individual tags *are*
 //     trimmed, since `a, b` is the natural way to write a tag list.
 //   - **A row may omit trailing OPTIONAL columns.** With header
 //     `id front back tags`, the row `ik<TAB>ik<TAB>I` is valid and means no

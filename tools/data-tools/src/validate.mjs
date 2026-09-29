@@ -15,26 +15,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { buildManifest, serializeManifest } from "./build-manifest.mjs";
-import { readJson } from "./json.mjs";
 import {
   bankAbsolutePath,
   bankRelativePath,
-  isSafeRelativePath,
   listBankFiles,
   loadBank,
   loadLibrary,
   REQUIRED_COLUMNS,
   SCHEMA_VERSION,
 } from "./library.mjs";
-import { hasFormatting, stripFormatting, validateInline } from "./markup.mjs";
-import {
-  AUDIO_INDEX_PATH,
-  BANKS_DIR,
-  DATA_DIR,
-  LIBRARY_PATH,
-  MANIFEST_PATH,
-  rel,
-} from "./paths.mjs";
+import { hasFormatting, validateInline } from "./markup.mjs";
+import { BANKS_DIR, LIBRARY_PATH, MANIFEST_PATH, rel } from "./paths.mjs";
 import { isValidWordId } from "./slug.mjs";
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -45,7 +36,7 @@ const problems = [];
 /** @type {string[]} */
 const warnings = [];
 
-/** @param {number} invariant 1-7, or 0 for structural / field-type problems */
+/** @param {number} invariant 1-6, or 0 for structural / field-type problems */
 function fail(invariant, message) {
   problems.push({ invariant, message });
 }
@@ -56,9 +47,8 @@ function warn(message) {
 function checkLanguages(where, languages) {
   if (!languages || typeof languages !== "object" || Array.isArray(languages)) {
     fail(0, `${where}: languages must be { front, back }`);
-    return [];
+    return;
   }
-  const locales = [];
   for (const side of ["front", "back"]) {
     const lang = languages[side];
     if (!lang || typeof lang !== "object") {
@@ -78,11 +68,8 @@ function checkLanguages(where, languages) {
         0,
         `${where}: languages.${side}.locale ${JSON.stringify(lang.locale)} is not a BCP-47 tag`,
       );
-    } else {
-      locales.push(lang.locale);
     }
   }
-  return locales;
 }
 
 // --- library.json ----------------------------------------------------------
@@ -97,9 +84,6 @@ try {
 
 /** @type {Array<{id: string, bank: string, entry: object}>} */
 const entries = [];
-/** Locales any deck actually uses, for invariant 7. */
-const usedLocales = new Set();
-
 if (library) {
   if (library.schemaVersion !== SCHEMA_VERSION) {
     fail(
@@ -143,9 +127,7 @@ if (library) {
       if (typeof entry?.color !== "string" || !HEX_COLOR.test(entry.color)) {
         fail(0, `${at}: color ${JSON.stringify(entry?.color)} must be #RRGGBB`);
       }
-      for (const locale of checkLanguages(at, entry?.languages)) {
-        usedLocales.add(locale);
-      }
+      checkLanguages(at, entry?.languages);
       // `icon` is optional, and its VALUE is deliberately not checked here: the
       // curated set of names lives in the frontend, and duplicating that list is
       // exactly the cross-tool duplication schema 2 exists to remove. An
@@ -389,117 +371,6 @@ if (committedManifest !== null) {
   }
 }
 
-// --- audio/index.json (invariant 7) ----------------------------------------
-
-let clipCount = 0;
-let audioIndex = null;
-if (!fs.existsSync(AUDIO_INDEX_PATH)) {
-  fail(
-    7,
-    `${rel(AUDIO_INDEX_PATH)}: missing (an empty index — {} voices, {} clips — is valid)`,
-  );
-} else {
-  try {
-    audioIndex = readJson(AUDIO_INDEX_PATH);
-  } catch (error) {
-    fail(7, error.message);
-  }
-}
-
-if (audioIndex) {
-  const where = rel(AUDIO_INDEX_PATH);
-
-  if (audioIndex.schemaVersion !== SCHEMA_VERSION) {
-    fail(
-      0,
-      `${where}: schemaVersion is ${JSON.stringify(audioIndex.schemaVersion)}, expected ${SCHEMA_VERSION}`,
-    );
-  }
-  for (const key of ["generatedAt", "updatedAt"]) {
-    if (key in audioIndex) {
-      fail(
-        0,
-        `${where}: "${key}" must not exist — the index carries no timestamps`,
-      );
-    }
-  }
-
-  const isPlainObject = (value) =>
-    value && typeof value === "object" && !Array.isArray(value);
-
-  if (!isPlainObject(audioIndex.voices)) {
-    fail(0, `${where}: voices must be an object`);
-  } else {
-    for (const [locale, voice] of Object.entries(audioIndex.voices)) {
-      if (!usedLocales.has(locale)) {
-        fail(7, `${where}: voices["${locale}"] is not a locale any deck uses`);
-      }
-      if (typeof voice !== "string" || voice === "") {
-        fail(0, `${where}: voices["${locale}"] must be a non-empty voice name`);
-      }
-    }
-  }
-
-  if (!isPlainObject(audioIndex.clips)) {
-    fail(0, `${where}: clips must be an object`);
-  } else {
-    const clips = Object.entries(audioIndex.clips);
-    clipCount = clips.length;
-
-    for (const [key, clip] of clips) {
-      const at = `${where}: clips["${key}"]`;
-      const separator = key.indexOf(":");
-      if (separator <= 0 || separator === key.length - 1) {
-        fail(7, `${at}: key must be \`\${locale}:\${strippedText}\``);
-        continue;
-      }
-      const locale = key.slice(0, separator);
-      const text = key.slice(separator + 1);
-
-      if (!usedLocales.has(locale)) {
-        fail(7, `${at}: locale "${locale}" is not used by any deck`);
-      }
-      // Clip keys are stripped text: markup in a key means a stale generator.
-      if (stripFormatting(text) !== text) {
-        fail(
-          7,
-          `${at}: key text still contains inline markup; it must be stripped to ${JSON.stringify(stripFormatting(text))}`,
-        );
-      }
-
-      if (!isPlainObject(clip)) {
-        fail(7, `${at}: must be an object with path and bytes`);
-        continue;
-      }
-      if (!isSafeRelativePath(clip.path)) {
-        fail(
-          7,
-          `${at}: path ${JSON.stringify(clip.path)} must be relative to data/ and never contain ".."`,
-        );
-      } else {
-        const absolute = path.join(DATA_DIR, clip.path);
-        if (!fs.existsSync(absolute)) {
-          fail(7, `${at}: no file at data/${clip.path}`);
-        } else if (Number.isInteger(clip.bytes)) {
-          const actual = fs.statSync(absolute).size;
-          if (clip.bytes !== actual) {
-            fail(7, `${at}: bytes ${clip.bytes} != actual file size ${actual}`);
-          }
-        }
-      }
-      if (!Number.isInteger(clip.bytes) || clip.bytes <= 0) {
-        fail(7, `${at}: bytes must be a positive integer`);
-      }
-      if ("generatedAt" in clip) {
-        fail(
-          0,
-          `${at}: generatedAt must not exist — clips carry no timestamps`,
-        );
-      }
-    }
-  }
-}
-
 // --- report ----------------------------------------------------------------
 
 const INVARIANT_TITLES = {
@@ -510,7 +381,6 @@ const INVARIANT_TITLES = {
   4: "4. Word ids unique within a bank and slug-shaped",
   5: "5. Inline formatting balanced (warning only)",
   6: "6. manifest.json is a fresh regeneration of the authored files",
-  7: "7. audio/index.json clips exist, locales known, keys stripped",
 };
 
 if (warnings.length > 0) {
@@ -539,7 +409,7 @@ const totalWords = [...loadedBanks.values()].reduce(
 );
 console.log("data validation OK");
 console.log(
-  `  ${loadedBanks.size} deck(s), ${totalWords} words, ${clipCount} audio clip(s), ` +
+  `  ${loadedBanks.size} deck(s), ${totalWords} words, ` +
     `${warnings.length} warning(s)`,
 );
 for (const { id } of entries) {
@@ -556,4 +426,4 @@ for (const { id } of entries) {
     );
   }
 }
-console.log("  all 7 contract invariants satisfied");
+console.log("  all 6 contract invariants satisfied");

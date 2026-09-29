@@ -31,7 +31,7 @@ function resolveCommit(): string {
 
 /**
  * Custom domain (flashcards.nomomon.xyz) serves the app from the domain root,
- * so `base` stays "/". The deck/audio data lives in the repo's `data/` folder
+ * so `base` stays "/". The deck data lives in the repo's `data/` folder
  * and is copied to `dist/data` by scripts/postbuild.mjs, which is why the
  * default VITE_DATA_BASE_URL is same-origin.
  */
@@ -158,31 +158,6 @@ export default defineConfig({
               cacheName: "flashcards-banks",
               networkTimeoutSeconds: 5,
               expiration: { maxEntries: 32 },
-            },
-          },
-          {
-            // Audio filenames are content hashes, so a given URL can only ever
-            // hold one clip. That is what makes cache-first safe here, and it is
-            // the one place it is.
-            urlPattern: ({ url }) =>
-              /^\/data\/audio\/.+\.ogg$/.test(url.pathname),
-            handler: "CacheFirst",
-            options: {
-              cacheName: "flashcards-audio",
-              expiration: {
-                maxEntries: 2000,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // The clip index changes whenever audio is generated.
-            urlPattern: ({ url }) => url.pathname === "/data/audio/index.json",
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "flashcards-audio-index",
-              expiration: { maxEntries: 1 },
             },
           },
         ],

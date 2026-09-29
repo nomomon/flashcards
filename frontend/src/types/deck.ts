@@ -70,19 +70,3 @@ export interface Manifest {
   schemaVersion: number;
   decks: DeckSummary[];
 }
-
-export interface AudioClip {
-  path: string;
-  bytes: number;
-}
-
-/**
- * `clips` is keyed by `` `${locale}:${strippedText}` `` - the card text with
- * inline formatting removed (`lib/markup`), never the raw text. The index
- * carries no timestamps by design: it is a pure function of its inputs.
- */
-export interface AudioIndex {
-  schemaVersion: number;
-  voices: Record<string, string>;
-  clips: Record<string, AudioClip>;
-}

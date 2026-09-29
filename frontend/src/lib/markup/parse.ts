@@ -6,11 +6,11 @@
  *   `__underline__` -> underline
  *
  * This is a deliberate port of `tools/data-tools/src/markup.mjs`, the reference
- * implementation, down to the algorithm: `stripFormatting` (see `./strip.ts`) is
- * how audio clip keys are built, so a disagreement of one character between the
- * two makes the app look up a key the generator never wrote and audio silently
- * disappears. Anything cleverer here would be a bug waiting to happen, so the
- * shape of the code is kept recognisably the same to make diffing the two easy.
+ * implementation, down to the algorithm: the validator and the app have to
+ * agree on what is balanced markup and what is literal text, or a deck passes
+ * CI and then renders its delimiters. Anything cleverer here would be a bug
+ * waiting to happen, so the shape of the code is kept recognisably the same to
+ * make diffing the two easy.
  *
  * The rules, and why each is what it is:
  *

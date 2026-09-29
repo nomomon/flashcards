@@ -40,12 +40,10 @@
 // for bold-and-italic. validateInline() warns about such runs so the author
 // finds out, but it is only ever a warning.
 //
-// stripFormatting() is the function audio keys on: the clip key is
-// `${locale}:${stripFormatting(text)}`. Any tool touching audio must produce
-// exactly the same string, which is why this file is the single reference. It is
-// differentially fuzzed against tools/audio-gen/src/format.mjs and
+// stripFormatting() is what the app hands to speech synthesis, so this file is
+// the single reference for it. It is differentially fuzzed against
 // frontend/src/lib/markup/strip.ts; that corpus must show zero mismatches, or
-// clips silently orphan.
+// the validator and the app disagree about what a card says.
 
 /** Markers recognised as delimiters, longest first so `**` beats `*`. */
 const MARKERS = ["**", "__", "*"];
@@ -254,7 +252,7 @@ export function validateInline(text) {
 /**
  * The plain text of a formatted string: delimiters removed, escapes resolved,
  * everything else left exactly as-is (no trimming, no whitespace collapsing).
- * This is what audio clips are keyed on.
+ * This is what the app hands to speech synthesis.
  *
  *   "de **man**"     -> "de man"
  *   "\\*literal\\*"  -> "*literal*"

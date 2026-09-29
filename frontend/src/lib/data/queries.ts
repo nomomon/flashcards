@@ -6,14 +6,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { AudioIndex, Deck, DeckSummary, Manifest } from "@/types/deck";
-import { DATA_SCHEMA_VERSION } from "./schemas";
-import {
-  DataFetchError,
-  fetchAudioIndex,
-  fetchDeck,
-  fetchManifest,
-} from "./source";
+import type { Deck, DeckSummary, Manifest } from "@/types/deck";
+import { fetchDeck, fetchManifest } from "./source";
 
 /**
  * Query keys and options for remote deck data.
@@ -29,7 +23,6 @@ export const dataKeys = {
   manifest: ["data", "manifest"] as const,
   deck: (deckId: string, revision: string) =>
     ["data", "deck", deckId, revision] as const,
-  audioIndex: ["data", "audio-index"] as const,
 };
 
 /** Key prefix used to sweep deck caches in `useSyncData`. */
@@ -41,12 +34,6 @@ const DECK_KEY_PREFIX = ["data", "deck"] as const;
  */
 const unresolvedDeckKey = (deckId: string) =>
   ["data", "deck", deckId, "__unresolved__"] as const;
-
-const EMPTY_AUDIO_INDEX: AudioIndex = {
-  schemaVersion: DATA_SCHEMA_VERSION,
-  voices: {},
-  clips: {},
-};
 
 /**
  * The manifest is the freshness oracle, so it is never served stale: refetch on
@@ -72,34 +59,6 @@ export function deckQueryOptions(summary: DeckSummary): UseQueryOptions<Deck> {
     queryKey: dataKeys.deck(summary.id, summary.revision),
     queryFn: () => fetchDeck(summary),
     staleTime: Number.POSITIVE_INFINITY,
-  };
-}
-
-/**
- * Missing audio is a normal state, not an error: clips are produced by a
- * separate workflow that may not have run yet, and the repo ships an empty
- * index. A 404 (or a host that answers 403 for missing objects) therefore
- * resolves to an empty index so `useSpeak` can quietly fall back to TTS.
- * Malformed audio data still throws - that is corruption, not absence.
- */
-export function audioIndexQueryOptions(): UseQueryOptions<AudioIndex> {
-  return {
-    queryKey: dataKeys.audioIndex,
-    queryFn: async () => {
-      try {
-        return await fetchAudioIndex();
-      } catch (error) {
-        if (
-          error instanceof DataFetchError &&
-          (error.status === 404 || error.status === 403)
-        ) {
-          return EMPTY_AUDIO_INDEX;
-        }
-        throw error;
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
   };
 }
 
@@ -137,10 +96,6 @@ export function useDeck(deckId: string): UseQueryResult<Deck> {
       };
 
   return useQuery(options);
-}
-
-export function useAudioIndex(): UseQueryResult<AudioIndex> {
-  return useQuery(audioIndexQueryOptions());
 }
 
 /**

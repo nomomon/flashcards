@@ -10,14 +10,11 @@ import { type InlineNode, parseInline } from "./parse";
  *   `**a *b* c**`  -> `a b c`
  *   `un**balanced` -> `un**balanced`   (unbalanced markers stay literal)
  *
- * This is load-bearing beyond cosmetics. Audio clips are keyed on
- * `` `${locale}:${stripFormatting(text)}` ``, so this function must produce
- * byte-identical output to `tools/data-tools/src/markup.mjs` and
- * `tools/audio-gen/src/format.mjs`. If it does not, the app asks the index for a
- * key the generator never wrote, finds nothing, and pronunciation goes quiet
- * with no error anywhere. It is defined as the flattening of `parseInline` for
- * exactly that reason: rendering and speaking can then never disagree about
- * what the text says.
+ * This is load-bearing beyond cosmetics: it is what gets handed to speech
+ * synthesis, so without it a card is pronounced "star star man star star". It
+ * is defined as the flattening of `parseInline` for exactly that reason -
+ * rendering and speaking can then never disagree about what the text says. The
+ * validator applies the same strip via `tools/data-tools/src/markup.mjs`.
  */
 export function stripFormatting(text: string): string {
   if (typeof text !== "string" || text === "") return "";

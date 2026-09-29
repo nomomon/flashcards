@@ -2,8 +2,8 @@
 
 Everything the frontend renders comes from static files under `data/`, published
 alongside the site. This file is the single source of truth for their shape. The
-frontend, the validator and the audio generator all encode this contract, so a
-change here is a change in three places.
+frontend and the validator both encode this contract, so a change here is a
+change in two places.
 
 ## The split that matters
 
@@ -12,9 +12,8 @@ schema 1:
 
 - **Authored** — what a human or an AI edits. `library.json` and the `.tsv` word
   banks. Nothing in them is derived, so nothing in them can go stale.
-- **Generated** — what the app consumes. `manifest.json` and `audio/index.json`,
-  both produced by `tools/`. Committed (the site serves them statically) but
-  never hand-edited.
+- **Generated** — what the app consumes. `manifest.json`, produced by `tools/`.
+  Committed (the site serves it statically) but never hand-edited.
 
 Schema 1 duplicated `wordCount` and `tags` between the manifest and the deck
 file, and needed a validator rule to police the duplication. Now they are derived
@@ -25,10 +24,7 @@ data/
 ├── library.json             # AUTHORED  deck metadata, the single source
 ├── banks/
 │   └── <deckId>.tsv         # AUTHORED  one word per line
-├── manifest.json            # GENERATED library + banks, with derived fields
-└── audio/
-    ├── index.json           # GENERATED spoken-text -> clip lookup
-    └── <locale>/<sha1>.ogg  # Opus-in-Ogg, mono, speech-tuned bitrate
+└── manifest.json            # GENERATED library + banks, with derived fields
 ```
 
 `data/` is copied to `dist/data` at build time (`frontend/scripts/postbuild.mjs`),
@@ -142,9 +138,9 @@ something derived at load time, this is visible in review, which is the point.
   parsed into React elements and never passed to `innerHTML`, so there is no
   injection surface even though a workflow can write these files.
 
-Because three separate implementations must agree, "it degrades gracefully" is
-not a precise enough instruction. The exact behaviour, verified identical across
-all three:
+Because two separate implementations must agree, "it degrades gracefully" is not
+a precise enough instruction. The exact behaviour, verified identical across
+both:
 
 - Delimiters are matched as **whole tokens**, longest first (`**`, then `__`,
   then `*`), and a token never splits across a run of delimiter characters.
@@ -169,9 +165,8 @@ all three:
 There is deliberately no bold-italic shorthand. To get both, nest explicitly:
 `**a *b* c**`.
 
-**Formatting is stripped before text-to-speech, and the stripped text is what
-audio is keyed on.** So italicising a word does not orphan its clip and does not
-trigger regeneration. Any tool touching audio applies the same strip: remove
+**Formatting is stripped before text-to-speech**, so italicising a word changes
+what it looks like and never what it sounds like. The strip is: remove
 delimiters, resolve escapes, leave everything else alone.
 
 ## `manifest.json` (generated)
@@ -232,31 +227,8 @@ output contains a clock.
 Because invariant 6 is a **byte** comparison, the serialization is part of the
 contract, not an implementation detail: every generated JSON file here is
 `JSON.stringify(value, null, 2)` followed by a single trailing newline, with
-object keys in the order this document lists them (and `clips` sorted by key).
-Deck order in `decks[]` follows `library.json`'s authored order, which is also the
+object keys in the order this document lists them. Deck order in `decks[]` follows `library.json`'s authored order, which is also the
 display order; only the hash input is sorted.
-
-## `audio/index.json` (generated)
-
-```json
-{
-  "schemaVersion": 2,
-  "voices": { "nl-NL": "Kore", "en-US": "Kore" },
-  "clips": {
-    "nl-NL:ik": { "path": "audio/nl-NL/8f2b1c9e4a.ogg", "bytes": 3412 }
-  }
-}
-```
-
-- Clip key is `` `${locale}:${strippedText}` `` — formatting removed, per above.
-  Shared across decks, so a word appearing in two decks is voiced once.
-- Filename stem is `sha1(key)` truncated to 10 hex chars. The hash makes
-  generation idempotent: a key present in `clips` with a file on disk is skipped,
-  and a deleted file is regenerated.
-- No timestamps, for the same reproducibility reason as the manifest.
-- Audio is Opus in Ogg: mono, 24 kHz input, ~16 kbps VBR, so a few KB per word.
-  (Ogg Opus always advertises 48 kHz in its header regardless; that is inherent
-  to the codec, not a mis-encode.)
 
 ## Invariants the validator enforces
 
@@ -275,6 +247,3 @@ display order; only the hash input is sorted.
    is a likely typo rather than corruption.
 6. `manifest.json` is byte-identical to a fresh regeneration from `library.json`
    and the banks.
-7. Every `audio/index.json` clip path exists on disk with the recorded byte size;
-   every clip key's locale is used by some deck; and no clip key contains
-   formatting markup (it must be stripped text).
