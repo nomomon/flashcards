@@ -134,11 +134,12 @@ a public one. The decks themselves are published to an ordinary public URL; what
 is private is the repo, not the address.
 
 In CI the value comes from the repository variable `DATA_BASE_URL`
-(Settings → Secrets and variables → Actions → Variables). It is a variable
-rather than a secret on purpose: Vite inlines it into the public bundle, so it
-could not be kept secret, and it decides where the app looks rather than who may
-look. Unset it and everything falls back to the decks committed here, which is
-what makes a fork deploy a working site.
+(Settings → Secrets and variables → Actions → Variables), set to
+`https://flashcards-decks.nomomon.xyz`. It is a variable rather than a secret on
+purpose: Vite inlines it into the public bundle, so it could not be kept secret,
+and it decides where the app looks rather than who may look. Unset it and
+everything falls back to the decks committed here, which is what makes a fork
+deploy a working site.
 
 Three things follow the same value, so there is one answer rather than three:
 the app's fetches (`lib/data/source.ts`), the service worker's caching rules
