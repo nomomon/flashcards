@@ -47,8 +47,9 @@
   --color-background: var(--background);
   --color-brand: var(--brand);
   --color-brand-blue: var(--brand-blue);
-  --color-brand-violet: var(--brand-violet);
-  --color-brand-pink: var(--brand-pink);
+  --color-brand-red: var(--brand-red);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-green: var(--brand-green);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -63,8 +64,11 @@
    * Signature hue. Every neutral below carries a trace of it - 0.003 to 0.018
    * chroma, under the threshold where a grey reads as coloured but over the one
    * where it reads as unconsidered. One number moves the whole app's temperature.
+   *
+   * 260 is not a taste call: Google Blue 500 (#4285F4) converts to
+   * oklch(0.630 0.180 260.0), so the greys are tinted by the brand's own hue.
    */
-  --hue: 295;
+  --hue: 260;
 
   --background: oklch(0.995 0.003 var(--hue));
   --foreground: oklch(0.16 0.012 var(--hue));
@@ -72,8 +76,18 @@
   --card-foreground: oklch(0.16 0.012 var(--hue));
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.16 0.012 var(--hue));
-  --primary: oklch(0.52 0.208 var(--hue));
-  --primary-foreground: oklch(0.985 0.008 var(--hue));
+  /*
+   * Google's published brand values, used verbatim - converting them to oklch
+   * would only lose the exact numbers everyone else renders.
+   *
+   * A darker weight than the 500 everywhere something carries text. White on
+   * Blue 500 measures 3.56:1, under AA. Blue 600 clears it as a button (4.51:1)
+   * but only reaches 4.43:1 as a link on the page, so this is Blue 700: 5.37:1
+   * behind white and 5.27:1 as text, both directions clear. The 500s stay where
+   * nothing is read on them - the app icon and the bloom.
+   */
+  --primary: #1967d2; /* Google Blue 700 */
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.968 0.006 var(--hue));
   --secondary-foreground: oklch(0.22 0.014 var(--hue));
   --muted: oklch(0.968 0.006 var(--hue));
@@ -85,10 +99,10 @@
      "incorrect" is also red: destructive marks an action that loses data (reset
      progress), while incorrect marks an answer. Sharing one token would mean a
      palette change to either silently restyling the other. */
-  --correct: oklch(0.596 0.145 152);
-  --correct-foreground: oklch(0.985 0 0);
-  --incorrect: oklch(0.592 0.212 24);
-  --incorrect-foreground: oklch(0.985 0 0);
+  --correct: #188038; /* Google Green 700 - 4.93:1 as text, 5.02:1 behind white */
+  --correct-foreground: #ffffff;
+  --incorrect: #d93025; /* Google Red 600 - 4.69:1 as text, 4.77:1 behind white */
+  --incorrect-foreground: #ffffff;
   --border: oklch(0.918 0.007 var(--hue));
   --input: oklch(0.918 0.007 var(--hue));
   --ring: oklch(0.6 0.176 var(--hue));
@@ -111,8 +125,8 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0.004 var(--hue));
   --sidebar-foreground: oklch(0.16 0.012 var(--hue));
-  --sidebar-primary: oklch(0.52 0.208 var(--hue));
-  --sidebar-primary-foreground: oklch(0.985 0.008 var(--hue));
+  --sidebar-primary: #1967d2;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.968 0.006 var(--hue));
   --sidebar-accent-foreground: oklch(0.22 0.014 var(--hue));
   --sidebar-border: oklch(0.918 0.007 var(--hue));
@@ -124,9 +138,16 @@
    * `.atmosphere` utility below.
    */
   --brand: oklch(0.52 0.208 var(--hue));
-  --brand-blue: oklch(0.58 0.196 265);
-  --brand-violet: oklch(0.56 0.232 300);
-  --brand-pink: oklch(0.7 0.188 352);
+  /*
+   * The bloom's four stops, at full 500 strength in both themes. Lifting them
+   * to the 300 weights for dark, the way --primary is lifted, turned the bloom
+   * grey: four pastels blurred into each other average out. Nothing is read on
+   * a bloom, so saturation costs nothing here and is what makes it glow.
+   */
+  --brand-blue: #4285f4;
+  --brand-red: #ea4335;
+  --brand-yellow: #fbbc04;
+  --brand-green: #34a853;
 }
 
 .dark {
@@ -136,8 +157,8 @@
   --card-foreground: oklch(0.985 0.005 var(--hue));
   --popover: oklch(0.205 0.016 var(--hue));
   --popover-foreground: oklch(0.985 0.005 var(--hue));
-  --primary: oklch(0.72 0.174 var(--hue));
-  --primary-foreground: oklch(0.18 0.02 var(--hue));
+  --primary: #8ab4f8; /* Google Blue 300 - 8.89:1 either direction */
+  --primary-foreground: #0b1b33;
   --secondary: oklch(0.272 0.018 var(--hue));
   --secondary-foreground: oklch(0.985 0.005 var(--hue));
   --muted: oklch(0.272 0.018 var(--hue));
@@ -147,10 +168,10 @@
   --destructive: oklch(0.704 0.191 22.216);
   /* Lifted and de-saturated for a dark ground, where the light values read
      muddy rather than green and red. */
-  --correct: oklch(0.706 0.153 155);
-  --correct-foreground: oklch(0.208 0 0);
-  --incorrect: oklch(0.704 0.191 22.216);
-  --incorrect-foreground: oklch(0.208 0 0);
+  --correct: #81c995; /* Google Green 300 - 9.57:1 */
+  --correct-foreground: #0d1f13;
+  --incorrect: #f28b82; /* Google Red 300 - 7.85:1 */
+  --incorrect-foreground: #2a0f0c;
   --border: oklch(1 0 0 / 11%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.62 0.16 var(--hue));
@@ -165,17 +186,14 @@
   --chart-incorrect: oklch(0.66 0.15 52);
   --sidebar: oklch(0.205 0.016 var(--hue));
   --sidebar-foreground: oklch(0.985 0.005 var(--hue));
-  --sidebar-primary: oklch(0.72 0.174 var(--hue));
-  --sidebar-primary-foreground: oklch(0.18 0.02 var(--hue));
+  --sidebar-primary: #8ab4f8;
+  --sidebar-primary-foreground: #0b1b33;
   --sidebar-accent: oklch(0.272 0.018 var(--hue));
   --sidebar-accent-foreground: oklch(0.985 0.005 var(--hue));
   --sidebar-border: oklch(1 0 0 / 11%);
   --sidebar-ring: oklch(0.62 0.16 var(--hue));
 
   --brand: oklch(0.72 0.174 var(--hue));
-  --brand-blue: oklch(0.66 0.184 265);
-  --brand-violet: oklch(0.66 0.212 300);
-  --brand-pink: oklch(0.76 0.166 352);
 }
 
 @layer base {
@@ -226,9 +244,10 @@
   .bloom::before {
     inset: -30%;
     background:
-      radial-gradient(42% 55% at 20% 26%, var(--brand-pink), transparent 70%),
-      radial-gradient(46% 58% at 78% 32%, var(--brand-blue), transparent 72%),
-      radial-gradient(58% 66% at 52% 84%, var(--brand-violet), transparent 74%);
+      radial-gradient(40% 52% at 22% 24%, var(--brand-red), transparent 70%),
+      radial-gradient(42% 54% at 76% 26%, var(--brand-yellow), transparent 70%),
+      radial-gradient(46% 58% at 80% 74%, var(--brand-green), transparent 72%),
+      radial-gradient(54% 62% at 34% 82%, var(--brand-blue), transparent 74%);
     filter: blur(44px);
     opacity: 0.46;
   }

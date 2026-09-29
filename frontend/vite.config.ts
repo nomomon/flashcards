@@ -74,8 +74,8 @@ export default defineConfig({
         // Matches <meta name="theme-color"> and --background in index.css. A
         // manifest takes one value, so this is the light one: the splash it
         // paints should look like the app opening, not like a different app.
-        theme_color: "#fdfdff",
-        background_color: "#fdfdff",
+        theme_color: "#fcfdff",
+        background_color: "#fcfdff",
         icons: [
           {
             src: "/icons/icon-192.png",

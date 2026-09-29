@@ -33,7 +33,7 @@ export function MainHeader({ action }: { action?: ReactNode }) {
         <div className="flex items-center gap-2.5">
           {/* Below 40px the glyph pair stops being legible, so the header wears
               the reduced mark. */}
-          <Mark className="size-9 shrink-0 text-primary" />
+          <Mark className="size-9 shrink-0" />
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             Flashcards
           </h1>
