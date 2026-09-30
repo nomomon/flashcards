@@ -202,9 +202,27 @@
   }
   body {
     @apply bg-background text-foreground;
+    /*
+     * Kills the 300ms double-tap-to-zoom without taking deliberate pinch-zoom
+     * with it. This is the half of the zoom fix that works on iOS, where the
+     * viewport meta's `user-scalable=no` is ignored on purpose.
+     */
+    touch-action: manipulation;
   }
   html {
     @apply font-sans;
+    /*
+     * Nothing outside the app shell scrolls, so a drag that reaches the end of
+     * a list must not rubber-band the page or trigger pull-to-refresh. The
+     * shell is exactly one viewport tall; this is what stops it being dragged
+     * off its own edges.
+     */
+    overscroll-behavior: none;
+    /*
+     * Safari inflates text in landscape unless told not to, which reads as the
+     * app having zoomed itself.
+     */
+    -webkit-text-size-adjust: 100%;
   }
 }
 

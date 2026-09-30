@@ -29,7 +29,12 @@ const TABS = [
 export function MainHeader({ action }: { action?: ReactNode }) {
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center justify-between gap-4">
+      {/* `min-h-9` is the action button's own height (`size-9`). Without it the
+          row is as tall as its tallest child, so the Stats tab - which has no
+          action - drew a 32px header where Decks draws 36, and switching tabs
+          nudged the title up 2px and the tab bar up 4. The header now reserves
+          the taller of the two whether or not anything is in it. */}
+      <header className="flex min-h-9 items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           {/* Below 40px the glyph pair stops being legible, so the header wears
               the reduced mark. */}

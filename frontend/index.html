@@ -2,7 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      `viewport-fit=cover` lets the app paint under the notch and the home
+      indicator, which is what makes an installed PWA fill the screen instead of
+      being letterboxed; `env(safe-area-inset-*)` in the shell keeps content out
+      from under them.
+
+      Zoom is pinned because pinching or double-tapping a card deck is always an
+      accident, never an intent. iOS Safari deliberately ignores `user-scalable`
+      for accessibility, so `touch-action: manipulation` in index.css is what
+      actually stops the double-tap zoom there; this line is what stops it on
+      Android.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
